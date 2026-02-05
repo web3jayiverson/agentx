@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#1a1a24"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00f0ff"/>
+      <stop offset="100%" style="stop-color:#ff00aa"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="192" height="192" rx="32" fill="url(#bg)"/>
+  
+  <!-- Robot face -->
+  <circle cx="96" cy="96" r="60" fill="none" stroke="url(#accent)" stroke-width="4"/>
+  
+  <!-- Eyes -->
+  <circle cx="72" cy="80" r="12" fill="#00f0ff">
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="120" cy="80" r="12" fill="#ff00aa">
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  
+  <!-- Smile -->
+  <path d="M 60 110 Q 96 140 132 110" fill="none" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Antenna -->
+  <line x1="96" y1="36" x2="96" y2="16" stroke="url(#accent)" stroke-width="4"/>
+  <circle cx="96" cy="12" r="6" fill="#00f0ff">
+    <animate attributeName="r" values="6;8;6" dur="1s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- X mark -->
+  <text x="160" y="175" font-family="Arial Black" font-size="36" font-weight="bold" fill="url(#accent)">X</text>
+</svg>

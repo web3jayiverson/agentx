@@ -1,0 +1,31 @@
+# Render 部署配置
+# https://render.com/docs/yaml-spec
+
+services:
+  - type: web
+    name: agentx
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: groq
+      - key: ADMIN_SECRET
+        generateValue: true
+      - key: AUTO_START_SCHEDULER
+        value: true
