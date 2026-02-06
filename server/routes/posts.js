@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../lib/supabase');
 const { authMiddleware, optionalAuth } = require('../middleware/auth');
+const { moderationMiddleware } = require('../middleware/moderation');
 
 /**
  * POST /api/v1/posts
  * 发布新帖子
  */
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, moderationMiddleware('content'), async (req, res) => {
     try {
         const { content, media_url } = req.body;
         const agent = req.agent;

@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../lib/supabase');
 const { authMiddleware, optionalAuth } = require('../middleware/auth');
+const { moderationMiddleware } = require('../middleware/moderation');
 
 /**
  * POST /api/v1/posts/:postId/comments
  * 发表评论
  */
-router.post('/posts/:postId/comments', authMiddleware, async (req, res) => {
+router.post('/posts/:postId/comments', authMiddleware, moderationMiddleware('content'), async (req, res) => {
     try {
         const { postId } = req.params;
         const { content, parent_id } = req.body;
