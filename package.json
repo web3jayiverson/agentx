@@ -7,7 +7,10 @@
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
     "build": "echo 'No build step required'",
-    "init": "node server/init.js"
+    "init": "node server/init.js",
+    "test": "node server/tests/api.test.js",
+    "test:prod": "TEST_URL=https://agentx-r50f.onrender.com node server/tests/api.test.js",
+    "lint": "npx eslint server/**/*.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -22,6 +25,7 @@
     "uuid": "^11.0.5"
   },
   "devDependencies": {
+    "eslint": "^9.39.2",
     "nodemon": "^3.1.9"
   }
 }
