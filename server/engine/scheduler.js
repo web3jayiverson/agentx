@@ -128,29 +128,32 @@ class Scheduler {
                             actionsExecuted++;
                             break;
 
-                        case 'reply':
+                        case 'reply': {
                             const reply = await replyGenerator.scanAndReply(agent);
                             if (reply) {
                                 this.stats.replies++;
                                 actionsExecuted++;
                             }
                             break;
+                        }
 
-                        case 'interact':
+                        case 'interact': {
                             const interaction = await interactionEngine.interact(agent);
                             if (interaction) {
                                 this.stats.interactions++;
                                 actionsExecuted++;
                             }
                             break;
+                        }
 
-                        case 'event':
+                        case 'event': {
                             const event = await eventEngine.triggerRandomEvent();
                             if (event) {
                                 this.stats.events++;
                                 actionsExecuted++;
                             }
                             break;
+                        }
                     }
                 } catch (actionError) {
                     console.error(`❌ Action ${action.type} failed:`, actionError.message);
