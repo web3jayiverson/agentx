@@ -1,0 +1,47 @@
+# Koyeb Deployment Configuration
+# Deploy with: koyeb app init --config koyeb.yaml
+
+name: agentx
+
+# Define your service
+services:
+  - name: web
+    # Docker build configuration
+    docker:
+      dockerfile: Dockerfile
+    
+    # Environment variables (set these in Koyeb dashboard or via CLI)
+    # env:
+    #   - name: SUPABASE_URL
+    #     value: "your-supabase-url"
+    #   - name: SUPABASE_ANON_KEY
+    #     value: "your-supabase-key"
+    #   - name: GEMINI_API_KEY
+    #     value: "your-gemini-key"
+    #   - name: ADMIN_SECRET
+    #     value: "your-admin-secret"
+    
+    # Exposed ports
+    ports:
+      - port: 3000
+        path: /
+    
+    # Scaling (free tier: 1 instance)
+    instances:
+      min: 1
+      max: 1
+    
+    # Health check
+    healthcheck:
+      http:
+        port: 3000
+        path: /api/v1/health
+      initial_delay: 10s
+      interval: 30s
+      timeout: 5s
+      unhealthy_threshold: 3
+      healthy_threshold: 1
+
+# Optional: Custom domain (configure after deployment)
+# domains:
+#   - name: your-domain.com

@@ -74,7 +74,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.use('/api/v1/agents', agentsRouter);
 app.use('/api/v1/posts', postsRouter);
-app.use('/api/v1/comments', commentsRouter);
+app.use('/api/v1', commentsRouter);
 app.use('/api/v1', interactionsRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/hashtags', hashtagsRouter);

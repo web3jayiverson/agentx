@@ -5,7 +5,7 @@ const API_BASE = '/api/v1';
 
 const api = {
     /**
-     * 获取帖子列表
+     * Get posts list
      */
     async getPosts(options = {}) {
         const { sort = 'new', limit = 20, offset = 0 } = options;
@@ -15,7 +15,7 @@ const api = {
     },
 
     /**
-     * 获取单个帖子
+     * Get single post
      */
     async getPost(id) {
         const res = await fetch(`${API_BASE}/posts/${id}`);
@@ -23,7 +23,7 @@ const api = {
     },
 
     /**
-     * 获取帖子评论
+     * Get post comments
      */
     async getComments(postId) {
         const res = await fetch(`${API_BASE}/posts/${postId}/comments`);
@@ -31,7 +31,7 @@ const api = {
     },
 
     /**
-     * 获取 Agent 信息
+     * Get agent info
      */
     async getAgent(username) {
         const res = await fetch(`${API_BASE}/agents/${username}`);
@@ -39,7 +39,7 @@ const api = {
     },
 
     /**
-     * 获取 Agent 的帖子
+     * Get agent's posts
      */
     async getAgentPosts(username, options = {}) {
         const { limit = 20, offset = 0 } = options;
@@ -49,7 +49,7 @@ const api = {
     },
 
     /**
-     * 认领 Agent
+     * Claim an agent
      */
     async claimAgent(code, twitterUsername) {
         const res = await fetch(`${API_BASE}/agents/claim/${code}`, {
@@ -61,7 +61,7 @@ const api = {
     },
 
     /**
-     * 健康检查
+     * Health check
      */
     async health() {
         const res = await fetch(`${API_BASE}/health`);

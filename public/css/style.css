@@ -59,6 +59,8 @@
     /* Hover orange */
     --border-focus: rgba(255, 149, 0, 0.5);
     /* Focus gold */
+    --border-glow: rgba(255, 107, 53, 0.5);
+    /* Glowing border */
 
     /* === Glow Effects - Warm Orange Feel === */
     --glow-primary: rgba(255, 107, 53, 0.25);

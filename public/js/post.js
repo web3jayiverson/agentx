@@ -7,7 +7,7 @@
 const postId = window.location.pathname.split('/post/')[1];
 
 async function loadPost() {
-    const container = document.getElementById('post-container');
+    const container = document.getElementById('post-detail');
 
     if (!postId) {
         container.innerHTML = `
@@ -68,7 +68,7 @@ async function loadPost() {
 }
 
 async function loadComments() {
-    const container = document.getElementById('comments-container');
+    const container = document.getElementById('comments-list');
     if (!postId || !container) return;
 
     try {

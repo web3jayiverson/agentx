@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * 初始化应用
+ * Initialize the application
  */
 async function initApp() {
-    // 检查 API 健康状态
+    // Check API health status
     try {
         const health = await api.health();
         console.log('🤖 AgentX API:', health.message);
@@ -31,10 +31,10 @@ async function initApp() {
         console.error('API connection failed:', err);
     }
 
-    // 检查用户登录状态
+    // Check user login status
     checkLoginStatus();
 
-    // 根据页面初始化不同功能
+    // Initialize different features based on page
     const path = window.location.pathname;
 
     if (path === '/' || path === '/index.html') {
@@ -51,7 +51,7 @@ async function initApp() {
 }
 
 /**
- * 检查用户登录状态
+ * Check user login status
  */
 function checkLoginStatus() {
     const token = localStorage.getItem('agentx_token');
@@ -59,7 +59,7 @@ function checkLoginStatus() {
     const userBtn = document.getElementById('user-nav-btn');
 
     if (token && loginBtn && userBtn) {
-        // 验证 token
+        // Validate token
         fetch('/api/v1/auth/me', {
             headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -70,7 +70,7 @@ function checkLoginStatus() {
                     userBtn.style.display = 'flex';
                     userBtn.textContent = `👤 ${data.user.display_name || data.user.username}`;
                 } else {
-                    // Token 过期
+                    // Token expired
                     localStorage.removeItem('agentx_token');
                     localStorage.removeItem('agentx_user');
                 }
@@ -83,7 +83,7 @@ function checkLoginStatus() {
 }
 
 /**
- * 加载 Timeline
+ * Load Timeline
  */
 async function loadTimeline() {
     const feedContainer = document.getElementById('feed');
@@ -119,7 +119,7 @@ async function loadTimeline() {
 }
 
 /**
- * 加载帖子详情
+ * Load post detail
  */
 async function loadPostDetail(postId) {
     const postContainer = document.getElementById('post-detail');
@@ -160,7 +160,7 @@ async function loadPostDetail(postId) {
 }
 
 /**
- * 加载 Agent 主页
+ * Load agent profile
  */
 async function loadAgentProfile(username) {
     const profileContainer = document.getElementById('agent-profile');
@@ -218,7 +218,7 @@ async function loadAgentProfile(username) {
 }
 
 /**
- * 加载探索页面
+ * Load explore page
  */
 async function loadExplore() {
     const feedContainer = document.getElementById('explore-feed');
@@ -246,7 +246,7 @@ async function loadExplore() {
 }
 
 /**
- * 创建帖子卡片 HTML
+ * Create post card HTML
  */
 function createPostCard(post, isDetail = false) {
     const agent = post.agent;
@@ -297,7 +297,7 @@ function createPostCard(post, isDetail = false) {
 }
 
 /**
- * 创建评论项 HTML
+ * Create comment item HTML
  */
 function createCommentItem(comment) {
     const agent = comment.agent;
@@ -321,7 +321,7 @@ function createCommentItem(comment) {
 }
 
 /**
- * 格式化相对时间
+ * Format relative time
  */
 function formatRelativeTime(dateString) {
     const date = new Date(dateString);
@@ -341,7 +341,7 @@ function formatRelativeTime(dateString) {
 }
 
 /**
- * HTML 转义
+ * HTML escape
  */
 function escapeHtml(text) {
     if (!text) return '';
@@ -356,7 +356,7 @@ window.loadPostDetail = loadPostDetail;
 window.loadAgentProfile = loadAgentProfile;
 
 /**
- * 切换收藏状态
+ * Toggle favorite status
  */
 async function toggleFavorite(postId, button) {
     const token = localStorage.getItem('agentx_token');
@@ -395,13 +395,13 @@ async function toggleFavorite(postId, button) {
 window.toggleFavorite = toggleFavorite;
 
 /**
- * 分享帖子
+ * Share a post
  */
 async function sharePost(postId, agentName, button) {
     const postUrl = `${window.location.origin}/post/${postId}`;
     const shareText = `Check out this post by ${agentName} on AgentX! 🤖`;
 
-    // 如果支持 Web Share API
+    // If Web Share API is supported
     if (navigator.share) {
         try {
             await navigator.share({
@@ -413,20 +413,20 @@ async function sharePost(postId, agentName, button) {
             return;
         } catch (err) {
             if (err.name !== 'AbortError') {
-                // 用户取消分享不算错误
+                // User cancelled, not an error
             }
         }
     }
 
-    // 否则显示分享菜单
+    // Otherwise show share menu
     showShareMenu(postUrl, shareText, button);
 }
 
 /**
- * 显示分享菜单
+ * Show share menu
  */
 function showShareMenu(url, text, button) {
-    // 移除已存在的菜单
+    // Remove existing menu
     const existingMenu = document.querySelector('.share-menu');
     if (existingMenu) {
         existingMenu.remove();
@@ -444,7 +444,7 @@ function showShareMenu(url, text, button) {
         </div>
     `;
 
-    // 添加样式
+    // Add styles
     menu.style.cssText = `
         position: absolute;
         background: var(--bg-card);
@@ -456,7 +456,7 @@ function showShareMenu(url, text, button) {
         animation: fadeIn 0.2s ease;
     `;
 
-    // 设置菜单内容样式
+    // Set menu content styles
     const style = document.createElement('style');
     style.textContent = `
         .share-menu-content button {
@@ -481,14 +481,14 @@ function showShareMenu(url, text, button) {
     `;
     document.head.appendChild(style);
 
-    // 定位菜单
+    // Position menu
     const rect = button.getBoundingClientRect();
     menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
     menu.style.left = `${rect.left + window.scrollX}px`;
 
     document.body.appendChild(menu);
 
-    // 点击外部关闭
+    // Close when clicking outside
     setTimeout(() => {
         document.addEventListener('click', function closeMenu(e) {
             if (!menu.contains(e.target) && e.target !== button) {
@@ -500,7 +500,7 @@ function showShareMenu(url, text, button) {
 }
 
 /**
- * 复制到剪贴板
+ * Copy to clipboard
  */
 async function copyToClipboard(text) {
     try {
@@ -521,7 +521,7 @@ async function copyToClipboard(text) {
 }
 
 /**
- * 显示 toast 提示
+ * Show toast notification
  */
 function showToast(message) {
     const existingToast = document.querySelector('.toast');
