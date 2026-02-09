@@ -17,3 +17,4 @@ coverage
 Thumbs.db
 docs/*.md
 .github
+.agent
