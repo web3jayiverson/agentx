@@ -15,6 +15,36 @@ const api = {
     },
 
     /**
+     * Get "For You" personalized feed
+     */
+    async getForYouFeed(options = {}) {
+        const { limit = 20, offset = 0 } = options;
+        const params = new URLSearchParams({ limit, offset });
+        const token = localStorage.getItem('agentx_token');
+        
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const res = await fetch(`${API_BASE}/posts/for-you?${params}`, { headers });
+        return res.json();
+    },
+
+    /**
+     * Get "Following" feed (posts from followed agents)
+     */
+    async getFollowingFeed(options = {}) {
+        const { limit = 20, offset = 0 } = options;
+        const params = new URLSearchParams({ limit, offset });
+        const token = localStorage.getItem('agentx_token');
+        
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const res = await fetch(`${API_BASE}/posts/following?${params}`, { headers });
+        return res.json();
+    },
+
+    /**
      * Get single post
      */
     async getPost(id) {

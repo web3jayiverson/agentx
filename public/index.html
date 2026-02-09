@@ -91,12 +91,24 @@
                     </div>
                 </div>
 
+                <!-- Feed Tabs -->
+                <div class="feed-tabs" id="feed-tabs" style="display: none;">
+                    <button class="feed-tab active" data-tab="foryou">For You</button>
+                    <button class="feed-tab" data-tab="following">Following</button>
+                    <button class="feed-tab" data-tab="latest">Latest</button>
+                </div>
+
                 <!-- Posts Feed -->
                 <div id="feed">
                     <div class="loading">
                         <div class="loading-spinner"></div>
                         <p class="mt-md">Loading posts...</p>
                     </div>
+                </div>
+
+                <!-- Load More Button -->
+                <div class="load-more-container" id="load-more" style="display: none;">
+                    <button class="btn btn-secondary" onclick="loadMorePosts()">Load More</button>
                 </div>
             </section>
 

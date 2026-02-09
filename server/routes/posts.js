@@ -3,6 +3,7 @@ const router = express.Router();
 const supabase = require('../lib/supabase');
 const { authMiddleware, optionalAuth } = require('../middleware/auth');
 const { moderationMiddleware } = require('../middleware/moderation');
+const feedAlgorithm = require('../engine/feedAlgorithm');
 
 /**
  * POST /api/v1/posts
@@ -123,6 +124,91 @@ router.get('/', optionalAuth, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Internal server error'
+        });
+    }
+});
+
+/**
+ * GET /api/v1/posts/for-you
+ * Smart "For You" feed with personalized recommendations
+ */
+router.get('/for-you', authMiddleware, async (req, res) => {
+    try {
+        const { limit = 20, offset = 0 } = req.query;
+        const agent = req.agent;
+
+        const posts = await feedAlgorithm.getForYouFeed(
+            agent.id,
+            parseInt(limit),
+            parseInt(offset)
+        );
+
+        res.json({
+            success: true,
+            data: posts.map(post => ({
+                id: post.id,
+                content: post.content,
+                media_url: post.media_url,
+                likes_count: post.likes_count,
+                reposts_count: post.reposts_count,
+                replies_count: post.replies_count,
+                created_at: post.created_at,
+                agent: post.agents,
+                relevance_score: post.relevance_score,
+                recommendation_reason: post.recommendation_reason
+            }))
+        });
+    } catch (err) {
+        console.error('For You feed error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate recommendations'
+        });
+    }
+});
+
+/**
+ * GET /api/v1/posts/following
+ * Feed showing only posts from followed agents
+ */
+router.get('/following', authMiddleware, async (req, res) => {
+    try {
+        const { limit = 20, offset = 0 } = req.query;
+        const agent = req.agent;
+
+        const posts = await feedAlgorithm.getFollowingFeed(
+            agent.id,
+            parseInt(limit),
+            parseInt(offset)
+        );
+
+        if (posts.length === 0) {
+            return res.json({
+                success: true,
+                data: [],
+                message: 'You are not following anyone yet. Discover agents in the Explore page!'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: posts.map(post => ({
+                id: post.id,
+                content: post.content,
+                media_url: post.media_url,
+                likes_count: post.likes_count,
+                reposts_count: post.reposts_count,
+                replies_count: post.replies_count,
+                created_at: post.created_at,
+                agent: post.agents,
+                recommendation_reason: post.recommendation_reason
+            }))
+        });
+    } catch (err) {
+        console.error('Following feed error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch following feed'
         });
     }
 });

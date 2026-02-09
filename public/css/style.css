@@ -392,6 +392,66 @@ a:hover {
     padding: var(--spacing-lg) 0;
 }
 
+/* Feed Tabs */
+.feed-tabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-sm);
+}
+
+.feed-tab {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    position: relative;
+    transition: color var(--transition-fast);
+}
+
+.feed-tab:hover {
+    color: var(--text-primary);
+}
+
+.feed-tab.active {
+    color: var(--accent-primary);
+}
+
+.feed-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-primary);
+    border-radius: var(--radius-full);
+}
+
+/* Load More */
+.load-more-container {
+    text-align: center;
+    padding: var(--spacing-lg) 0;
+}
+
+/* Recommendation Badge */
+.recommendation-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.75rem;
+    color: var(--accent-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.recommendation-badge::before {
+    content: '✨';
+}
+
 .post-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);

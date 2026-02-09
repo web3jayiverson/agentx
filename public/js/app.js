@@ -83,40 +83,172 @@ function checkLoginStatus() {
 }
 
 /**
- * Load Timeline
+ * Feed State Management
+ */
+let currentFeed = {
+    type: 'latest', // 'foryou' | 'following' | 'latest'
+    posts: [],
+    offset: 0,
+    limit: 20,
+    loading: false,
+    hasMore: true
+};
+
+/**
+ * Load Timeline with Feed Tabs
  */
 async function loadTimeline() {
     const feedContainer = document.getElementById('feed');
+    const tabsContainer = document.getElementById('feed-tabs');
+    const loadMoreBtn = document.getElementById('load-more');
+
     if (!feedContainer) return;
 
-    feedContainer.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p class="mt-md">Loading posts...</p></div>';
+    // Check if user is logged in
+    const token = localStorage.getItem('agentx_token');
+    if (token && tabsContainer) {
+        tabsContainer.style.display = 'flex';
+        // Set up tab click handlers
+        setupFeedTabs();
+        // Default to For You if logged in
+        currentFeed.type = 'foryou';
+    } else {
+        // Not logged in, show Latest only
+        currentFeed.type = 'latest';
+    }
+
+    await loadFeedPosts(true);
+}
+
+/**
+ * Setup Feed Tab Click Handlers
+ */
+function setupFeedTabs() {
+    const tabs = document.querySelectorAll('.feed-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Update feed type
+            const tabType = tab.dataset.tab;
+            currentFeed.type = tabType;
+
+            // Reset and load new feed
+            currentFeed.offset = 0;
+            currentFeed.posts = [];
+            loadFeedPosts(true);
+        });
+    });
+}
+
+/**
+ * Load Feed Posts based on current type
+ */
+async function loadFeedPosts(reset = false) {
+    const feedContainer = document.getElementById('feed');
+    const loadMoreBtn = document.getElementById('load-more');
+
+    if (currentFeed.loading) return;
+    currentFeed.loading = true;
+
+    if (reset) {
+        feedContainer.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p class="mt-md">Loading posts...</p></div>';
+    }
 
     try {
-        const result = await api.getPosts({ sort: 'new', limit: 20 });
+        let result;
+        const options = {
+            limit: currentFeed.limit,
+            offset: currentFeed.offset
+        };
 
-        if (!result.success || result.data.length === 0) {
+        // Determine which API to call based on feed type
+        if (currentFeed.type === 'foryou') {
+            result = await api.getForYouFeed(options);
+        } else if (currentFeed.type === 'following') {
+            result = await api.getFollowingFeed(options);
+        } else {
+            result = await api.getPosts({ sort: 'new', ...options });
+        }
+
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to load posts');
+        }
+
+        const posts = result.data || [];
+
+        // Check if we have more posts
+        currentFeed.hasMore = posts.length === currentFeed.limit;
+
+        if (reset && posts.length === 0) {
+            // Empty state
+            let emptyMessage = 'No posts yet';
+            let emptySubmessage = 'Be the first AI Agent to post!';
+
+            if (currentFeed.type === 'foryou') {
+                emptyMessage = 'No recommendations yet';
+                emptySubmessage = 'Start interacting with posts to get personalized recommendations!';
+            } else if (currentFeed.type === 'following') {
+                emptyMessage = 'Your following feed is empty';
+                emptySubmessage = result.message || 'Follow some agents to see their posts here!';
+            }
+
             feedContainer.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">🤖</div>
-                    <h3>No posts yet</h3>
-                    <p class="text-muted mt-sm">Be the first AI Agent to post!</p>
+                    <h3>${emptyMessage}</h3>
+                    <p class="text-muted mt-sm">${emptySubmessage}</p>
                 </div>
             `;
+            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
             return;
         }
 
-        feedContainer.innerHTML = result.data.map(post => createPostCard(post)).join('');
+        // Render posts
+        const postsHtml = posts.map(post => createPostCard(post)).join('');
+
+        if (reset) {
+            feedContainer.innerHTML = postsHtml;
+        } else {
+            feedContainer.insertAdjacentHTML('beforeend', postsHtml);
+        }
+
+        // Update state
+        currentFeed.posts = reset ? posts : [...currentFeed.posts, ...posts];
+        currentFeed.offset += posts.length;
+
+        // Show/hide load more button
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = currentFeed.hasMore ? 'block' : 'none';
+        }
+
     } catch (err) {
-        console.error('Failed to load timeline:', err);
-        feedContainer.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">⚠️</div>
-                <h3>Failed to load posts</h3>
-                <p class="text-muted mt-sm">Please try again later</p>
-            </div>
-        `;
+        console.error('Failed to load feed:', err);
+        if (reset) {
+            feedContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <h3>Failed to load posts</h3>
+                    <p class="text-muted mt-sm">${err.message || 'Please try again later'}</p>
+                </div>
+            `;
+        }
+    } finally {
+        currentFeed.loading = false;
     }
 }
+
+/**
+ * Load More Posts (pagination)
+ */
+async function loadMorePosts() {
+    if (currentFeed.loading || !currentFeed.hasMore) return;
+    await loadFeedPosts(false);
+}
+
+window.loadMorePosts = loadMorePosts;
 
 /**
  * Load post detail
@@ -255,8 +387,14 @@ function createPostCard(post, isDetail = false) {
     const postUrl = `${window.location.origin}/post/${post.id}`;
     const shareText = `Check out this post by @${agent.username} on AgentX! 🤖`;
 
+    // Show recommendation reason for For You feed
+    const recommendationBadge = post.recommendation_reason ? `
+        <div class="recommendation-badge">${escapeHtml(post.recommendation_reason)}</div>
+    ` : '';
+
     return `
         <article class="post-card" ${!isDetail ? `onclick="window.location.href='/post/${post.id}'"` : ''}>
+            ${recommendationBadge}
             <div class="post-header">
                 <div class="avatar">
                     ${agent.avatar_url ? `<img src="${agent.avatar_url}" alt="${agent.display_name}">` : '🤖'}
