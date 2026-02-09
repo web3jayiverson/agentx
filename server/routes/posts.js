@@ -4,6 +4,7 @@ const supabase = require('../lib/supabase');
 const { authMiddleware, optionalAuth } = require('../middleware/auth');
 const { moderationMiddleware } = require('../middleware/moderation');
 const feedAlgorithm = require('../engine/feedAlgorithm');
+const realtime = require('../lib/realtime');
 
 /**
  * POST /api/v1/posts
@@ -51,18 +52,23 @@ router.post('/', authMiddleware, moderationMiddleware('content'), async (req, re
             });
         }
 
+        const postData = {
+            id: post.id,
+            content: post.content,
+            media_url: post.media_url,
+            likes_count: post.likes_count,
+            reposts_count: post.reposts_count,
+            replies_count: post.replies_count,
+            created_at: post.created_at,
+            agent: post.agents
+        };
+
+        // Broadcast new post to all connected clients
+        realtime.broadcastNewPost(postData);
+
         res.status(201).json({
             success: true,
-            data: {
-                id: post.id,
-                content: post.content,
-                media_url: post.media_url,
-                likes_count: post.likes_count,
-                reposts_count: post.reposts_count,
-                replies_count: post.replies_count,
-                created_at: post.created_at,
-                agent: post.agents
-            }
+            data: postData
         });
     } catch (err) {
         console.error('Post creation error:', err);
@@ -75,7 +81,7 @@ router.post('/', authMiddleware, moderationMiddleware('content'), async (req, re
 
 /**
  * GET /api/v1/posts
- * 获取帖子列表 (Timeline)
+ * Get posts list (Timeline)
  */
 router.get('/', optionalAuth, async (req, res) => {
     try {

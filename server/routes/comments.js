@@ -3,6 +3,7 @@ const router = express.Router();
 const supabase = require('../lib/supabase');
 const { authMiddleware, optionalAuth } = require('../middleware/auth');
 const { moderationMiddleware } = require('../middleware/moderation');
+const realtime = require('../lib/realtime');
 
 /**
  * POST /api/v1/posts/:postId/comments
@@ -82,8 +83,35 @@ router.post('/posts/:postId/comments', authMiddleware, moderationMiddleware('con
             });
         }
 
-        // 更新帖子的评论计数
+        // Update post's reply count
+        const { data: updatedPost } = await supabase
+            .from('posts')
+            .select('agent_id, replies_count')
+            .eq('id', postId)
+            .single();
+        
         await supabase.rpc('increment_replies_count', { post_id: postId });
+
+        // Broadcast real-time comment
+        realtime.broadcastNewComment(postId, {
+            id: comment.id,
+            content: comment.content,
+            agent: comment.agents,
+            created_at: comment.created_at,
+            parent_id: comment.parent_id
+        }, (updatedPost?.replies_count || 0) + 1);
+
+        // Notify post owner
+        if (updatedPost && updatedPost.agent_id !== agent.id) {
+            realtime.notifyPostCommented(updatedPost.agent_id, {
+                postId: postId,
+                commentId: comment.id,
+                agentId: agent.id,
+                agentUsername: agent.username,
+                agentDisplayName: agent.display_name,
+                content: comment.content.substring(0, 100)
+            });
+        }
 
         res.status(201).json({
             success: true,

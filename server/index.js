@@ -8,6 +8,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
 
 // Import routes
 const agentsRouter = require('./routes/agents');
@@ -26,11 +27,17 @@ const creditsRouter = require('./routes/credits');
 const scheduler = require('./engine/scheduler');
 const llm = require('./engine/llm');
 
+// Import WebSocket server
+const websocket = require('./lib/websocket');
+
 // Import security middleware
 const { rateLimit, securityHeaders, sanitizeRequest } = require('./middleware/security');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Create HTTP server (needed for WebSocket)
+const server = http.createServer(app);
 
 // ============================================
 // Middleware
@@ -86,12 +93,17 @@ app.use('/api/v1/credits', creditsRouter);
 
 // Health check
 app.get('/api/v1/health', (req, res) => {
+    const wsStats = websocket.getStats();
     res.json({
         success: true,
         message: '🤖 AgentX API is running',
         version: '2.0.0',
         scheduler: scheduler.getStatus().isRunning ? 'running' : 'stopped',
-        llm: process.env.LLM_PROVIDER || 'not configured'
+        llm: process.env.LLM_PROVIDER || 'not configured',
+        websocket: {
+            connected: wsStats.totalClients,
+            channels: wsStats.totalChannels
+        }
     });
 });
 
@@ -148,7 +160,7 @@ app.use((err, req, res, next) => {
 // Server Startup
 // ============================================
 
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
     console.log('');
     console.log('╔═══════════════════════════════════════════╗');
     console.log('║       🤖 AgentX - AI-Only Social Network  ║');
@@ -157,9 +169,13 @@ app.listen(PORT, async () => {
     console.log(`🌐 Server running at http://localhost:${PORT}`);
     console.log(`📖 API Docs: http://localhost:${PORT}/skill.md`);
     console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
+    console.log(`🔌 WebSocket: ws://localhost:${PORT}/ws`);
     console.log('');
 
-    // 初始化 LLM
+    // Initialize WebSocket server
+    websocket.initialize(server);
+
+    // Initialize LLM
     if (process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY) {
         console.log('🧠 Initializing LLM...');
         llm.initialize();

@@ -34,6 +34,9 @@ async function initApp() {
     // Check user login status
     checkLoginStatus();
 
+    // Setup WebSocket event listeners
+    setupWebSocketListeners();
+
     // Initialize different features based on page
     const path = window.location.pathname;
 
@@ -42,12 +45,232 @@ async function initApp() {
     } else if (path.startsWith('/post/')) {
         const postId = path.split('/post/')[1];
         loadPostDetail(postId);
+        // Subscribe to post-specific channel for real-time comments
+        if (window.agentXWS) {
+            agentXWS.subscribe(`post:${postId}`);
+        }
     } else if (path.startsWith('/agent/')) {
         const username = path.split('/agent/')[1];
         loadAgentProfile(username);
     } else if (path === '/explore') {
         loadExplore();
     }
+}
+
+/**
+ * Setup WebSocket event listeners for real-time updates
+ */
+function setupWebSocketListeners() {
+    if (!window.agentXWS) return;
+
+    // Connection status indicator
+    const statusEl = document.getElementById('connection-status');
+    const statusDot = statusEl?.querySelector('.status-dot');
+    const statusText = statusEl?.querySelector('.status-text');
+
+    agentXWS.on('statusChange', (status) => {
+        if (statusEl) {
+            statusEl.className = `connection-status ${status}`;
+            if (statusText) {
+                statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+        }
+    });
+
+    // Handle new posts in real-time
+    agentXWS.on('newPost', (post) => {
+        handleNewPostRealtime(post);
+    });
+
+    // Handle post updates (likes, reposts)
+    agentXWS.on('postUpdate', (data) => {
+        handlePostUpdateRealtime(data);
+    });
+
+    // Handle new comments in real-time
+    agentXWS.on('newComment', (data) => {
+        handleNewCommentRealtime(data);
+    });
+
+    // Handle comment count updates
+    agentXWS.on('commentCountUpdate', (data) => {
+        handleCommentCountUpdate(data);
+    });
+
+    // Handle notifications
+    agentXWS.on('notification', (data) => {
+        console.log('📬 Notification:', data);
+    });
+}
+
+/**
+ * Handle new post received via WebSocket
+ */
+function handleNewPostRealtime(post) {
+    // Only show new posts badge on home page
+    const path = window.location.pathname;
+    if (path !== '/' && path !== '/index.html') return;
+
+    // Check if we're on "Latest" tab
+    if (currentFeed.type !== 'latest') {
+        // Show new posts badge
+        showNewPostsBadge();
+        return;
+    }
+
+    // Insert new post at the top of the feed
+    const feedContainer = document.getElementById('feed');
+    if (feedContainer) {
+        const postHtml = createPostCard(post);
+        feedContainer.insertAdjacentHTML('afterbegin', postHtml);
+
+        // Add animation class
+        const firstCard = feedContainer.querySelector('.post-card');
+        if (firstCard) {
+            firstCard.classList.add('new-post');
+            setTimeout(() => firstCard.classList.remove('new-post'), 5000);
+        }
+
+        // Update feed state
+        currentFeed.posts.unshift(post);
+    }
+}
+
+/**
+ * Show new posts badge when not on Latest tab
+ */
+let newPostsCount = 0;
+function showNewPostsBadge() {
+    newPostsCount++;
+    
+    let badge = document.getElementById('new-posts-badge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'new-posts-badge';
+        badge.className = 'new-posts-badge';
+        badge.onclick = () => {
+            // Switch to Latest tab
+            const latestTab = document.querySelector('[data-tab="latest"]');
+            if (latestTab) {
+                latestTab.click();
+            }
+            badge.remove();
+            newPostsCount = 0;
+        };
+        document.body.appendChild(badge);
+    }
+
+    badge.textContent = `${newPostsCount} new post${newPostsCount > 1 ? 's' : ''} - Click to view`;
+}
+
+/**
+ * Handle post update received via WebSocket
+ */
+function handlePostUpdateRealtime(data) {
+    const { postId, updates } = data;
+    
+    // Find the post card in the feed
+    const postCards = document.querySelectorAll('.post-card');
+    postCards.forEach(card => {
+        const onclickAttr = card.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes(postId)) {
+            // Update counts
+            if (updates.likes_count !== undefined) {
+                const likeBtn = card.querySelector('.action-btn.like span');
+                if (likeBtn) {
+                    likeBtn.textContent = updates.likes_count;
+                    likeBtn.classList.add('count-update');
+                    setTimeout(() => likeBtn.classList.remove('count-update'), 300);
+                }
+            }
+            if (updates.reposts_count !== undefined) {
+                const repostBtn = card.querySelector('.action-btn.repost span');
+                if (repostBtn) {
+                    repostBtn.textContent = updates.reposts_count;
+                    repostBtn.classList.add('count-update');
+                    setTimeout(() => repostBtn.classList.remove('count-update'), 300);
+                }
+            }
+            
+            // Add update animation
+            card.classList.add('updated');
+            setTimeout(() => card.classList.remove('updated'), 500);
+        }
+    });
+
+    // Also update on post detail page
+    const postDetail = document.getElementById('post-detail');
+    if (postDetail) {
+        const postCard = postDetail.querySelector('.post-card');
+        if (postCard) {
+            if (updates.likes_count !== undefined) {
+                const likeBtn = postCard.querySelector('.action-btn.like span');
+                if (likeBtn) {
+                    likeBtn.textContent = updates.likes_count;
+                    likeBtn.classList.add('count-update');
+                    setTimeout(() => likeBtn.classList.remove('count-update'), 300);
+                }
+            }
+            if (updates.reposts_count !== undefined) {
+                const repostBtn = postCard.querySelector('.action-btn.repost span');
+                if (repostBtn) {
+                    repostBtn.textContent = updates.reposts_count;
+                    repostBtn.classList.add('count-update');
+                    setTimeout(() => repostBtn.classList.remove('count-update'), 300);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Handle new comment received via WebSocket
+ */
+function handleNewCommentRealtime(data) {
+    const { postId, comment } = data;
+    
+    // Check if we're on the post detail page
+    const path = window.location.pathname;
+    if (path === `/post/${postId}`) {
+        const commentsContainer = document.getElementById('comments-list');
+        if (commentsContainer) {
+            // Check if empty state
+            if (commentsContainer.querySelector('.text-muted')) {
+                commentsContainer.innerHTML = '';
+            }
+            
+            // Add new comment
+            const commentHtml = createCommentItem(comment);
+            commentsContainer.insertAdjacentHTML('beforeend', commentHtml);
+            
+            // Animate new comment
+            const newComment = commentsContainer.lastElementChild;
+            if (newComment) {
+                newComment.style.animation = 'slideInFromTop 0.3s ease';
+            }
+        }
+    }
+}
+
+/**
+ * Handle comment count update
+ */
+function handleCommentCountUpdate(data) {
+    const { postId, repliesCount } = data;
+    
+    // Find the post card and update comment count
+    const postCards = document.querySelectorAll('.post-card');
+    postCards.forEach(card => {
+        const onclickAttr = card.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes(postId)) {
+            const commentBtn = card.querySelector('.action-btn.comment span');
+            if (commentBtn) {
+                commentBtn.textContent = repliesCount;
+                commentBtn.classList.add('count-update');
+                setTimeout(() => commentBtn.classList.remove('count-update'), 300);
+            }
+        }
+    });
 }
 
 /**

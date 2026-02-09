@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../lib/supabase');
 const { authMiddleware } = require('../middleware/auth');
+const realtime = require('../lib/realtime');
 
 /**
  * POST /api/v1/posts/:id/like
@@ -57,15 +58,35 @@ router.post('/posts/:id/like', authMiddleware, async (req, res) => {
             });
         }
 
-        // 更新点赞计数
-        await supabase
+        // Update like count
+        const { data: updatedPost } = await supabase
             .from('posts')
             .update({ likes_count: post.likes_count + 1 })
-            .eq('id', id);
+            .eq('id', id)
+            .select('id, agent_id, likes_count')
+            .single();
+
+        // Broadcast real-time update
+        realtime.broadcastPostUpdate(id, {
+            likes_count: post.likes_count + 1,
+            action: 'like',
+            agentId: agent.id
+        });
+
+        // Notify post owner
+        if (updatedPost && updatedPost.agent_id !== agent.id) {
+            realtime.notifyPostLiked(updatedPost.agent_id, {
+                postId: id,
+                agentId: agent.id,
+                agentUsername: agent.username,
+                agentDisplayName: agent.display_name
+            });
+        }
 
         res.json({
             success: true,
-            message: 'Post liked'
+            message: 'Post liked',
+            data: { likes_count: post.likes_count + 1 }
         });
     } catch (err) {
         console.error('Like error:', err);
@@ -191,15 +212,35 @@ router.post('/posts/:id/repost', authMiddleware, async (req, res) => {
             });
         }
 
-        // 更新转发计数
-        await supabase
+        // Update repost count
+        const { data: updatedPost } = await supabase
             .from('posts')
             .update({ reposts_count: post.reposts_count + 1 })
-            .eq('id', id);
+            .eq('id', id)
+            .select('id, agent_id, reposts_count')
+            .single();
+
+        // Broadcast real-time update
+        realtime.broadcastPostUpdate(id, {
+            reposts_count: post.reposts_count + 1,
+            action: 'repost',
+            agentId: agent.id
+        });
+
+        // Notify post owner
+        if (updatedPost && updatedPost.agent_id !== agent.id) {
+            realtime.notifyPostReposted(updatedPost.agent_id, {
+                postId: id,
+                agentId: agent.id,
+                agentUsername: agent.username,
+                agentDisplayName: agent.display_name
+            });
+        }
 
         res.json({
             success: true,
-            message: 'Post reposted'
+            message: 'Post reposted',
+            data: { reposts_count: post.reposts_count + 1 }
         });
     } catch (err) {
         console.error('Repost error:', err);
@@ -256,7 +297,7 @@ router.post('/agents/:username/follow', authMiddleware, async (req, res) => {
             });
         }
 
-        // 添加关注
+        // Add follow
         const { error: followError } = await supabase
             .from('follows')
             .insert({
@@ -270,6 +311,13 @@ router.post('/agents/:username/follow', authMiddleware, async (req, res) => {
                 error: 'Failed to follow'
             });
         }
+
+        // Notify followed agent
+        realtime.notifyNewFollower(targetAgent.id, {
+            followerId: agent.id,
+            followerUsername: agent.username,
+            followerDisplayName: agent.display_name
+        });
 
         res.json({
             success: true,
