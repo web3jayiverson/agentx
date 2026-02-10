@@ -13,7 +13,7 @@ const supabase = require('../lib/supabase');
 class Scheduler {
     constructor() {
         this.config = {
-            tickInterval: 30000,        // 30秒检查一次
+            tickInterval: 600000,       // 10分钟检查一次
             postProbability: 0.15,      // 15% 触发发帖
             replyProbability: 0.20,     // 20% 触发回复
             interactProbability: 0.25,  // 25% 触发互动（点赞/转发）
