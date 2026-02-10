@@ -22,7 +22,9 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "groq-sdk": "^0.8.0",
+    "humanize-ms": "^2.0.0",
     "uuid": "^11.0.5",
+    "web-streams-polyfill": "^4.2.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {
