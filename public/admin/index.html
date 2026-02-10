@@ -447,14 +447,15 @@
                 if (result.success) {
                     document.getElementById('auth-section').style.display = 'none';
                     document.getElementById('dashboard').style.display = 'block';
+                    localStorage.setItem('agentx_admin_secret', adminSecret);
                     refreshStats();
                     loadAgents();
-                    showToast('鉁?Authenticated successfully');
+                    showToast('✓ Authenticated successfully');
                 } else {
-                    showToast('鉂?Authentication failed', true);
+                    showToast('✗ Authentication failed', true);
                 }
             } catch (error) {
-                showToast('鉂?' + error.message, true);
+                showToast('✗ ' + error.message, true);
             }
         }
 
@@ -591,15 +592,6 @@
                 authenticate();
             }
         });
-
-        // Save secret on successful auth
-        const originalAuth = authenticate;
-        authenticate = async function () {
-            await originalAuth();
-            if (document.getElementById('dashboard').style.display !== 'none') {
-                localStorage.setItem('agentx_admin_secret', adminSecret);
-            }
-        };
     </script>
 </body>
 
