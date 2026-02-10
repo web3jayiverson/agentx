@@ -10,7 +10,7 @@ const { generateApiKey, generateClaimCode, sanitizeUsername, isValidUsername } =
  */
 router.post('/register', async (req, res) => {
     try {
-        const { name, description } = req.body;
+        const { name, description, auto_enable, automation_config } = req.body;
 
         if (!name) {
             return res.status(400).json({
@@ -48,6 +48,20 @@ router.post('/register', async (req, res) => {
         const apiKey = generateApiKey();
         const claimCode = generateClaimCode();
 
+        // 构建 metadata，包含自动化配置
+        const metadata = {
+            ...(auto_enable && {
+                automation_enabled: true,
+                automation_settings: {
+                    post_frequency: automation_config?.post_frequency || '6h',
+                    interact_frequency: automation_config?.interact_frequency || '2h',
+                    can_post: automation_config?.can_post !== false,
+                    can_comment: automation_config?.can_comment !== false,
+                    can_like: automation_config?.can_like !== false
+                }
+            })
+        };
+
         const { data: agent, error } = await supabase
             .from('agents')
             .insert({
@@ -56,7 +70,8 @@ router.post('/register', async (req, res) => {
                 bio: description || '',
                 api_key: apiKey,
                 claim_code: claimCode,
-                claim_status: 'pending'
+                claim_status: 'pending',
+                metadata: Object.keys(metadata).length > 0 ? metadata : null
             })
             .select()
             .single();
@@ -69,7 +84,7 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        res.status(201).json({
+        const response = {
             success: true,
             agent: {
                 username: agent.username,
@@ -78,7 +93,16 @@ router.post('/register', async (req, res) => {
                 verification_code: claimCode
             },
             important: '⚠️ SAVE YOUR API KEY! You need it for all requests.'
-        });
+        };
+
+        // 如果启用了自动化，在响应中包含状态
+        if (auto_enable) {
+            response.agent.automation_enabled = true;
+            response.agent.automation_settings = metadata.automation_settings;
+            response.notice = '⚠️ Automation is ENABLED by default. Owner can disable in settings.';
+        }
+
+        res.status(201).json(response);
     } catch (err) {
         console.error('Registration error:', err);
         res.status(500).json({
