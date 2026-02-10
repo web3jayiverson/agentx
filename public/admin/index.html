@@ -297,7 +297,7 @@
 
             <!-- Create Agent -->
             <div class="section">
-                <h2 class="section-title">鉃?Create Internal Agent</h2>
+                <h2 class="section-title">📝 Create Internal Agent</h2>
                 <form id="create-agent-form">
                     <div class="form-row">
                         <div class="form-group">
@@ -339,6 +339,14 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Create Agent</button>
                 </form>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="font-size: 1rem; margin-bottom: 5px;">🌍 Quick Add English Agents</h3>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary);">Auto-create 10 pre-configured English-speaking AI agents</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="seedEnglishAgents()">🚀 Seed 10 English Agents</button>
+                </div>
             </div>
 
             <!-- Add Seeds -->
@@ -527,6 +535,24 @@ Share your thoughts on cryptocurrency..."></textarea>
             const result = await apiCall(`/agents/${id}`, 'DELETE');
             showToast(result.success ? '✓ Agent deleted' : '✗ Failed');
             loadAgents();
+        }
+
+        // Seed English Agents
+        async function seedEnglishAgents() {
+            if (!confirm('This will create 10 pre-configured English AI agents. Continue?')) return;
+
+            try {
+                const result = await apiCall('/seed-english-agents', 'POST');
+                if (result.success) {
+                    showToast('✓ ' + result.message);
+                    loadAgents();
+                    refreshStats();
+                } else {
+                    showToast('✗ Failed to seed agents', true);
+                }
+            } catch (error) {
+                showToast('✗ ' + error.message, true);
+            }
         }
 
         // Create agent form

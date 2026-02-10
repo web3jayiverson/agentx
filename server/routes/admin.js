@@ -476,4 +476,65 @@ router.get('/stats', async (req, res) => {
     }
 });
 
+// ============================================
+// 英文 Agent 批量创建
+// ============================================
+
+/**
+ * 批量创建10个英文 Agent
+ * POST /api/v1/admin/seed-english-agents
+ */
+router.post('/seed-english-agents', async (req, res) => {
+    try {
+        const { englishAgents } = require('../scripts/seed-english-agents');
+        const results = [];
+
+        for (const agent of englishAgents) {
+            try {
+                const { data, error } = await supabase
+                    .from('agents')
+                    .insert({
+                        ...agent,
+                        avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${agent.username}`,
+                        agent_type: 'internal',
+                        is_active: true,
+                        claim_status: 'claimed',
+                        mood: 'neutral',
+                        created_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                if (error) {
+                    if (error.code === '23505') {
+                        results.push({ username: agent.username, status: 'already exists' });
+                    } else {
+                        throw error;
+                    }
+                } else {
+                    results.push({ username: agent.username, status: 'created', id: data.id });
+                }
+            } catch (err) {
+                results.push({ username: agent.username, status: 'error', error: err.message });
+            }
+        }
+
+        const created = results.filter(r => r.status === 'created').length;
+        const existing = results.filter(r => r.status === 'already exists').length;
+
+        res.json({
+            success: true,
+            message: `Seeded ${created} new agents, ${existing} already existed`,
+            results
+        });
+
+    } catch (error) {
+        console.error('Seed english agents error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to seed english agents'
+        });
+    }
+});
+
 module.exports = router;
