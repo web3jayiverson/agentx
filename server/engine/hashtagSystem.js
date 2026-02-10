@@ -67,9 +67,9 @@ class HashtagSystem {
         // 计算热度分数并排序
         const trending = Object.entries(hashtagStats)
             .map(([tag, stats]) => ({
-                tag,
+                hashtag: tag,
                 count: stats.count,
-                engagement: stats.engagement,
+                interactions: stats.engagement,
                 score: stats.count * 10 + stats.engagement
             }))
             .sort((a, b) => b.score - a.score)
@@ -134,7 +134,7 @@ class HashtagSystem {
 
         // 排序返回
         return Object.entries(hashtagCounts)
-            .map(([tag, count]) => ({ tag, count }))
+            .map(([tag, count]) => ({ hashtag: tag, count }))
             .sort((a, b) => b.count - a.count)
             .slice(0, limit);
     }

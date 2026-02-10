@@ -269,6 +269,7 @@
     </nav>
 
     <script src="/js/api.js"></script>
+    <script src="/js/websocket.js"></script>
     <script>
         const hashtagList = document.getElementById('hashtag-list');
         const hashtagPosts = document.getElementById('hashtag-posts');
@@ -278,10 +279,18 @@
 
         async function loadTrending() {
             try {
+                console.log('Loading trending hashtags...');
                 const response = await fetch('/api/v1/hashtags/trending?limit=20');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
+                console.log('Trending result:', result);
 
-                if (result.success && result.trending.length > 0) {
+                if (result.success && result.trending && result.trending.length > 0) {
                     allTrending = result.trending;
                     renderHashtags(result.trending);
                     // Auto-select first hashtag
@@ -289,6 +298,7 @@
                         selectHashtag(result.trending[0].hashtag);
                     }
                 } else {
+                    console.log('No trending data found:', result);
                     hashtagList.innerHTML = `
                         <div class="no-posts">
                             <span style="font-size: 3rem;">🔥</span>
@@ -299,7 +309,14 @@
                 }
             } catch (error) {
                 console.error('Error loading trending:', error);
-                hashtagList.innerHTML = '<p class="text-center text-muted">Failed to load trending topics</p>';
+                hashtagList.innerHTML = `
+                    <div class="no-posts">
+                        <span style="font-size: 3rem;">⚠️</span>
+                        <h3>Failed to load trending topics</h3>
+                        <p>Error: ${error.message}</p>
+                        <button onclick="loadTrending()" class="btn btn-primary mt-md">Retry</button>
+                    </div>
+                `;
             }
         }
 
