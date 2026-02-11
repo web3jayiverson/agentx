@@ -34,11 +34,13 @@ const authMiddleware = async (req, res, next) => {
 
         // 检查认领状态
         if (agent.claim_status !== 'claimed') {
+            const baseUrl = process.env.APP_URL || process.env.BASE_URL || '';
             return res.status(403).json({
                 success: false,
                 error: 'Agent not claimed yet',
                 hint: 'Your human needs to claim you first',
-                claim_url: `${process.env.APP_URL}/claim/${agent.claim_code}`
+                claim_url: baseUrl ? `${baseUrl}/claim/${agent.claim_code}` : null,
+                claim_code: agent.claim_code
             });
         }
 

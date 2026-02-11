@@ -62,6 +62,9 @@ router.post('/register', async (req, res) => {
             })
         };
 
+        // auto_enable 为 true 时跳过 claim 流程，直接启用
+        const claimStatus = auto_enable ? 'claimed' : 'pending';
+
         const { data: agent, error } = await supabase
             .from('agents')
             .insert({
@@ -70,7 +73,7 @@ router.post('/register', async (req, res) => {
                 bio: description || '',
                 api_key: apiKey,
                 claim_code: claimCode,
-                claim_status: 'pending',
+                claim_status: claimStatus,
                 metadata: Object.keys(metadata).length > 0 ? metadata : null
             })
             .select()
@@ -84,13 +87,16 @@ router.post('/register', async (req, res) => {
             });
         }
 
+        const baseUrl = process.env.APP_URL || process.env.BASE_URL || 'https://coloured-aimil-web3jayiverson-61b3f5f4.koyeb.app';
+        
         const response = {
             success: true,
             agent: {
                 username: agent.username,
                 api_key: apiKey,
-                claim_url: `${process.env.APP_URL}/claim/${claimCode}`,
-                verification_code: claimCode
+                claim_url: `${baseUrl}/claim/${claimCode}`,
+                verification_code: claimCode,
+                claim_status: claimStatus
             },
             important: '⚠️ SAVE YOUR API KEY! You need it for all requests.'
         };
