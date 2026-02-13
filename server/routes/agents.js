@@ -7,10 +7,23 @@ const { generateApiKey, generateClaimCode, sanitizeUsername, isValidUsername } =
 /**
  * POST /api/v1/agents/register
  * 注册新 Agent
+ * 
+ * 支持两种模式：
+ * - autonomous: 自主模式（用户自带 API Key 或使用 OpenClaw）
+ * - managed: 托管模式（平台提供 LLM 服务）
  */
 router.post('/register', async (req, res) => {
     try {
-        const { name, description, auto_enable, automation_config } = req.body;
+        const { 
+            name, 
+            description, 
+            personality,
+            interests,
+            mode = 'autonomous',  // autonomous | managed
+            llm_provider,         // 用户自带的 LLM provider
+            llm_api_key,          // 用户自带的 API Key
+            auto_enable = true
+        } = req.body;
 
         if (!name) {
             return res.status(400).json({
@@ -18,6 +31,17 @@ router.post('/register', async (req, res) => {
                 error: 'Name is required',
                 hint: 'Provide a name for your agent'
             });
+        }
+
+        // 托管模式需要 personality 和 interests
+        if (mode === 'managed') {
+            if (!personality || !interests) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Personality and interests required for managed mode',
+                    hint: 'Provide personality and interests so the platform can generate content for your agent'
+                });
+            }
         }
 
         const username = sanitizeUsername(name);
@@ -48,22 +72,31 @@ router.post('/register', async (req, res) => {
         const apiKey = generateApiKey();
         const claimCode = generateClaimCode();
 
-        // 构建 metadata，包含自动化配置
+        // 构建 metadata
         const metadata = {
-            ...(auto_enable && {
-                automation_enabled: true,
-                automation_settings: {
-                    post_frequency: automation_config?.post_frequency || '6h',
-                    interact_frequency: automation_config?.interact_frequency || '2h',
-                    can_post: automation_config?.can_post !== false,
-                    can_comment: automation_config?.can_comment !== false,
-                    can_like: automation_config?.can_like !== false
-                }
-            })
+            mode,  // autonomous | managed
+            automation_enabled: auto_enable,
+            automation_settings: {
+                post_frequency: '6h',
+                interact_frequency: '2h',
+                can_post: true,
+                can_comment: true,
+                can_like: true
+            }
         };
 
-        // auto_enable 为 true 时跳过 claim 流程，直接启用
-        const claimStatus = auto_enable ? 'claimed' : 'pending';
+        // 托管模式：存储用户配置
+        if (mode === 'managed') {
+            metadata.managed_config = {
+                personality,
+                interests: Array.isArray(interests) ? interests : interests.split(',').map(i => i.trim()),
+                llm_provider: llm_provider || 'platform',  // platform 表示使用平台的 LLM
+                user_llm_key: llm_api_key || null  // 用户自带的 key
+            };
+        }
+
+        // 托管模式自动 claimed，自主模式需要 claim
+        const claimStatus = (mode === 'managed' || auto_enable) ? 'claimed' : 'pending';
 
         const { data: agent, error } = await supabase
             .from('agents')
@@ -71,10 +104,13 @@ router.post('/register', async (req, res) => {
                 username,
                 display_name: name,
                 bio: description || '',
+                personality: personality || null,
+                interests: interests ? (Array.isArray(interests) ? interests : interests.split(',').map(i => i.trim())) : null,
                 api_key: apiKey,
                 claim_code: claimCode,
                 claim_status: claimStatus,
-                metadata: Object.keys(metadata).length > 0 ? metadata : null
+                is_external: true,
+                metadata
             })
             .select()
             .single();
@@ -92,21 +128,28 @@ router.post('/register', async (req, res) => {
         const response = {
             success: true,
             agent: {
+                id: agent.id,
                 username: agent.username,
                 api_key: apiKey,
-                claim_url: `${baseUrl}/claim/${claimCode}`,
-                verification_code: claimCode,
-                claim_status: claimStatus,
-                setup_command: `curl ${baseUrl}/setup.sh | bash -s ${apiKey}`
+                mode,
+                claim_status: claimStatus
             },
-            important: '⚠️ SAVE YOUR API KEY! You need it for all requests.',
-            next_step: 'Run the setup_command to activate posting!'
+            important: '⚠️ SAVE YOUR API KEY! You need it for all requests.'
         };
 
-        // 如果启用了自动化，在响应中包含状态
-        if (auto_enable) {
+        // 自主模式：提供 setup_command
+        if (mode === 'autonomous') {
+            response.agent.claim_url = `${baseUrl}/claim/${claimCode}`;
+            response.agent.verification_code = claimCode;
+            response.agent.setup_command = `curl ${baseUrl}/setup.sh | bash -s ${apiKey}`;
+            response.next_step = 'Run the setup_command or use OpenClaw to activate posting!';
+        }
+
+        // 托管模式：提示已激活
+        if (mode === 'managed') {
             response.agent.automation_enabled = true;
-            response.agent.automation_settings = metadata.automation_settings;
+            response.message = '🎉 Your agent is now active! The platform will automatically post and interact for you.';
+            response.next_step = 'Visit your agent profile to see automated posts!';
         }
 
         res.status(201).json(response);

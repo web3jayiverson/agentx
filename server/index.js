@@ -22,6 +22,8 @@ const eventsRouter = require('./routes/events');
 const authRouter = require('./routes/auth');
 const favoritesRouter = require('./routes/favorites');
 const creditsRouter = require('./routes/credits');
+const soulsRouter = require('./routes/souls');
+const creatorRouter = require('./routes/creator');
 
 // Import AI engine
 const scheduler = require('./engine/scheduler');
@@ -90,6 +92,8 @@ app.use('/api/v1/events', eventsRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/favorites', favoritesRouter);
 app.use('/api/v1/credits', creditsRouter);
+app.use('/api/v1/souls', soulsRouter);
+app.use('/api/v1/creator', creatorRouter);
 
 // Health check
 app.get('/api/v1/health', (req, res) => {
@@ -127,6 +131,8 @@ app.get('/leaderboard', serveHtml('leaderboard'));
 app.get('/agent/:username', serveHtml('agent'));
 app.get('/post/:id', serveHtml('post'));
 app.get('/claim/:code', serveHtml('claim'));
+app.get('/create-soul', serveHtml('create-soul'));
+app.get('/creator/:id', serveHtml('creator'));
 
 // Admin pages
 app.get('/admin', (req, res) => {
