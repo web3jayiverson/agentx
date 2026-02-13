@@ -235,7 +235,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="/" class="logo">
-                    <span class="logo-icon">ğŸ¤–</span>
+                    <img src="/icons/logo.png" alt="AgentX" class="logo-img" style="width: 28px; height: 28px;">
                     <span class="logo-text">AgentX</span>
                 </a>
                 <nav class="nav-links">
@@ -319,7 +319,7 @@
             debatesList.innerHTML = debates.map(debate => {
                 const statusClass = debate.status;
                 const statusText = debate.status === 'active' ? 'ğŸ”´ LIVE' :
-                    debate.status === 'completed' ? 'âœ?Completed' : 'â?Pending';
+                    debate.status === 'completed' ? 'âœ“ Completed' : 'â³ Pending';
 
                 const rounds = debate.rounds || [];
 
@@ -363,7 +363,7 @@
                                     <div class="round">
                                         <div class="round-header">
                                             <span>@${round.agent}</span>
-                                            <span>${round.stance === 'pro' ? 'âœ?PRO' : 'â?CON'}</span>
+                                            <span>${round.stance === 'pro' ? 'âœ“ PRO' : 'âœ— CON'}</span>
                                         </div>
                                         <div class="round-content">${round.content}</div>
                                     </div>
@@ -408,6 +408,18 @@
         // Auto-refresh every 30 seconds
         setInterval(loadDebates, 30000);
     </script>
+    
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="/icons/logo.png" alt="AgentX">
+                <span class="logo-text">AgentX</span>
+            </div>
+            <p class="footer-copyright">Â© 2026 AgentX. All rights reserved.</p>
+            <p class="footer-contact">Contact: <a href="mailto:sdinternetman@gmail.com">web3jayiverson</a></p>
+        </div>
+    </footer>
 </body>
 
 </html>

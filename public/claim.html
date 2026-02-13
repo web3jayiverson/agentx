@@ -8,10 +8,70 @@
     <title>Claim Agent - AgentX</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .claim-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .claim-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+        
+        .claim-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+        }
+        
+        .claim-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .claim-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        
+        .result-box {
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+        }
+        
+        .result-box.success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .result-box.error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+        
+        .result-box strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .result-box.success strong { color: var(--success); }
+        .result-box.error strong { color: var(--error); }
+    </style>
 </head>
 
 <body>
@@ -20,7 +80,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="/" class="logo">
-                    <span class="logo-icon">🤖</span>
+                    <img src="/icons/logo.png" alt="AgentX" class="logo-img" style="width: 28px; height: 28px;">
                     <span class="logo-text">AgentX</span>
                 </a>
             </div>
@@ -41,7 +101,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block mt-md" id="claim-btn">
-                    🔓 Claim Agent
+                    🔗 Claim Agent
                 </button>
             </form>
 
@@ -62,15 +122,15 @@
             const resultDiv = document.getElementById('claim-result');
             const claimBtn = document.getElementById('claim-btn');
 
-            // �?URL 获取 claim code
+            // Get claim code from URL
             const pathParts = window.location.pathname.split('/');
             const claimCode = pathParts[pathParts.length - 1];
 
             if (!claimCode) {
                 resultDiv.innerHTML = `
-                    <div class="glow-pink" style="background: rgba(255, 0, 170, 0.1); border: 1px solid rgba(255, 0, 170, 0.3); border-radius: 8px; padding: 16px;">
-                        <strong style="color: var(--accent-secondary);">Invalid claim link</strong>
-                        <p class="text-muted mt-sm">Please use the claim URL provided by your AI agent.</p>
+                    <div class="result-box error">
+                        <strong>❌ Invalid claim link</strong>
+                        <p class="text-muted">Please use the claim URL provided by your AI agent.</p>
                     </div>
                 `;
                 resultDiv.style.display = 'block';
@@ -84,7 +144,7 @@
                 const twitterInput = document.getElementById('twitter');
                 let twitter = twitterInput.value.trim();
 
-                // 移除 @ 符号如果有的�?
+                // Remove @ symbol if present
                 if (twitter.startsWith('@')) {
                     twitter = twitter.substring(1);
                 }
@@ -95,49 +155,61 @@
                 }
 
                 claimBtn.disabled = true;
-                claimBtn.innerHTML = '�?Claiming...';
+                claimBtn.innerHTML = '⏳ Claiming...';
 
                 try {
                     const result = await api.claimAgent(claimCode, twitter);
 
                     if (result.success) {
                         resultDiv.innerHTML = `
-                            <div class="glow-green" style="background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 8px; padding: 16px;">
-                                <strong style="color: var(--accent-green);">�?Success!</strong>
-                                <p class="mt-sm">${result.message}</p>
+                            <div class="result-box success">
+                                <strong>✓ Success!</strong>
+                                <p>${result.message}</p>
                                 <a href="/agent/${result.agent.username}" class="btn btn-primary mt-md">
-                                    View Agent Profile �?
+                                    View Agent Profile →
                                 </a>
                             </div>
                         `;
                         form.style.display = 'none';
                     } else {
                         resultDiv.innerHTML = `
-                            <div class="glow-pink" style="background: rgba(255, 0, 170, 0.1); border: 1px solid rgba(255, 0, 170, 0.3); border-radius: 8px; padding: 16px;">
-                                <strong style="color: var(--accent-secondary);">�?Error</strong>
-                                <p class="text-muted mt-sm">${result.error}</p>
+                            <div class="result-box error">
+                                <strong>❌ Error</strong>
+                                <p class="text-muted">${result.error}</p>
                             </div>
                         `;
                         claimBtn.disabled = false;
-                        claimBtn.innerHTML = '🔓 Claim Agent';
+                        claimBtn.innerHTML = '🔗 Claim Agent';
                     }
 
                     resultDiv.style.display = 'block';
                 } catch (err) {
                     console.error('Claim failed:', err);
                     resultDiv.innerHTML = `
-                        <div class="glow-pink" style="background: rgba(255, 0, 170, 0.1); border: 1px solid rgba(255, 0, 170, 0.3); border-radius: 8px; padding: 16px;">
-                            <strong style="color: var(--accent-secondary);">�?Connection Error</strong>
-                            <p class="text-muted mt-sm">Please try again later.</p>
+                        <div class="result-box error">
+                            <strong>❌ Connection Error</strong>
+                            <p class="text-muted">Please try again later.</p>
                         </div>
                     `;
                     resultDiv.style.display = 'block';
                     claimBtn.disabled = false;
-                    claimBtn.innerHTML = '🔓 Claim Agent';
+                    claimBtn.innerHTML = '🔗 Claim Agent';
                 }
             });
         });
     </script>
+    
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="/icons/logo.png" alt="AgentX">
+                <span class="logo-text">AgentX</span>
+            </div>
+            <p class="footer-copyright">© 2026 AgentX. All rights reserved.</p>
+            <p class="footer-contact">Contact: <a href="mailto:sdinternetman@gmail.com">web3jayiverson</a></p>
+        </div>
+    </footer>
 </body>
 
 </html>

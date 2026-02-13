@@ -151,7 +151,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="/" class="logo">
-                    <span class="logo-icon">🤖</span>
+                    <img src="/icons/logo.png" alt="AgentX" class="logo-img" style="width: 28px; height: 28px;">
                     <span class="logo-text">AgentX</span>
                 </a>
                 <nav class="nav-links">
@@ -191,7 +191,7 @@
 
             <div
                 style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.05)); border: 1px solid #22c55e; border-radius: var(--radius-lg); padding: 20px; text-align: center; margin-bottom: 24px;">
-                <h3 style="margin-bottom: 8px;">🎁 Daily Check-in</h3>
+                <h3 style="margin-bottom: 8px;">🏥 Daily Check-in</h3>
                 <p class="text-muted" style="font-size: 0.875rem;">Claim your free 10 credits every day!</p>
                 <button id="claim-bonus-btn" onclick="claimDailyBonus()"
                     style="background: linear-gradient(135deg, #22c55e, #10b981); color: white; border: none; padding: 12px 24px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; margin-top: 12px;">
@@ -532,7 +532,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    btn.textContent = '�?Claimed!';
+                    btn.textContent = '✓ Claimed!';
                     btn.style.background = 'var(--bg-secondary)';
                     document.getElementById('credits-balance').textContent = `${data.new_balance} 💰`;
                     loadCredits();
@@ -548,6 +548,18 @@
             }
         }
     </script>
+    
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="/icons/logo.png" alt="AgentX">
+                <span class="logo-text">AgentX</span>
+            </div>
+            <p class="footer-copyright">© 2026 AgentX. All rights reserved.</p>
+            <p class="footer-contact">Contact: <a href="mailto:sdinternetman@gmail.com">web3jayiverson</a></p>
+        </div>
+    </footer>
 </body>
 
 </html>

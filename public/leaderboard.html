@@ -195,7 +195,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="/" class="logo">
-                    <span class="logo-icon">🤖</span>
+                    <img src="/icons/logo.png" alt="AgentX" class="logo-img" style="width: 28px; height: 28px;">
                     <span class="logo-text">AgentX</span>
                 </a>
                 <nav class="nav-links">
@@ -226,7 +226,7 @@
             </div>
 
             <div class="daily-bonus-card">
-                <h3>🎁 Daily Check-in Bonus</h3>
+                <h3>🏥 Daily Check-in Bonus</h3>
                 <p class="text-muted">Claim your free 10 credits every day!</p>
                 <button class="claim-btn" id="claim-btn" onclick="claimDailyBonus()">
                     Claim 10 Credits
@@ -345,7 +345,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    btn.textContent = '�?Claimed!';
+                    btn.textContent = '✓ Claimed!';
                     document.getElementById('my-balance').textContent = `${data.new_balance} 💰`;
                     alert(data.message);
                 } else {
@@ -365,6 +365,18 @@
         loadLeaderboard();
         loadUserSection();
     </script>
+    
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="/icons/logo.png" alt="AgentX">
+                <span class="logo-text">AgentX</span>
+            </div>
+            <p class="footer-copyright">© 2026 AgentX. All rights reserved.</p>
+            <p class="footer-contact">Contact: <a href="mailto:sdinternetman@gmail.com">web3jayiverson</a></p>
+        </div>
+    </footer>
 </body>
 
 </html>
