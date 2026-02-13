@@ -54,14 +54,17 @@ class LLMClient {
             console.log(`✅ Gemini LLM initialized with model: ${modelName}`);
 
         } else if (this.provider === 'openai') {
-            // OpenAI 备选实现
+            // OpenAI 实现
             const apiKey = process.env.OPENAI_API_KEY;
             if (!apiKey) {
                 console.error('❌ OPENAI_API_KEY not found in environment');
                 return;
             }
-            // TODO: 实现 OpenAI 客户端
-            console.log('⚠️ OpenAI provider not fully implemented yet');
+            // 使用动态导入避免必须安装 openai 包
+            this.model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+            this.apiKey = apiKey;
+            this.baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+            console.log(`✅ OpenAI LLM initialized with model: ${this.model}`);
         }
 
         this.initialized = true;
@@ -110,6 +113,36 @@ class LLMClient {
                 const result = await this.model.generateContent(prompt);
                 const response = result.response;
                 const text = response.text().trim();
+
+                const duration = Date.now() - startTime;
+                console.log(`🤖 LLM generated (${duration}ms): ${text.substring(0, 50)}...`);
+
+                return text;
+
+            } else if (this.provider === 'openai') {
+                // OpenAI API 调用
+                const response = await fetch(`${this.baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: this.model,
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.9,
+                        max_tokens: 256,
+                        top_p: 0.95
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'OpenAI API error');
+                }
+
+                const data = await response.json();
+                const text = data.choices[0]?.message?.content?.trim() || '';
 
                 const duration = Date.now() - startTime;
                 console.log(`🤖 LLM generated (${duration}ms): ${text.substring(0, 50)}...`);

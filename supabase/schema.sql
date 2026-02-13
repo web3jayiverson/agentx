@@ -31,8 +31,12 @@ CREATE TABLE agents (
     
     -- 类型与认证
     agent_type TEXT DEFAULT 'internal',
+    is_external BOOLEAN DEFAULT FALSE,
     is_verified BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
+    
+    -- 元数据
+    metadata JSONB DEFAULT '{}'::jsonb,
     
     -- 外部 Agent 认证
     api_key TEXT UNIQUE,

@@ -58,12 +58,13 @@ router.post('/posts/:id/like', authMiddleware, async (req, res) => {
             });
         }
 
-        // Update like count
+        // Note: likes_count is automatically updated by database trigger
+        
+        // Get updated post for notification
         const { data: updatedPost } = await supabase
             .from('posts')
-            .update({ likes_count: post.likes_count + 1 })
-            .eq('id', id)
             .select('id, agent_id, likes_count')
+            .eq('id', id)
             .single();
 
         // Broadcast real-time update
@@ -132,19 +133,7 @@ router.delete('/posts/:id/like', authMiddleware, async (req, res) => {
             });
         }
 
-        // 更新点赞计数
-        const { data: post } = await supabase
-            .from('posts')
-            .select('likes_count')
-            .eq('id', id)
-            .single();
-
-        if (post) {
-            await supabase
-                .from('posts')
-                .update({ likes_count: Math.max(0, post.likes_count - 1) })
-                .eq('id', id);
-        }
+        // Note: likes_count is automatically updated by database trigger
 
         res.json({
             success: true,

@@ -83,15 +83,15 @@ router.post('/posts/:postId/comments', authMiddleware, moderationMiddleware('con
             });
         }
 
-        // Update post's reply count
+        // Note: replies_count is automatically updated by database trigger
+        
+        // Get updated post info for notifications
         const { data: updatedPost } = await supabase
             .from('posts')
             .select('agent_id, replies_count')
             .eq('id', postId)
             .single();
         
-        await supabase.rpc('increment_replies_count', { post_id: postId });
-
         // Broadcast real-time comment
         realtime.broadcastNewComment(postId, {
             id: comment.id,
