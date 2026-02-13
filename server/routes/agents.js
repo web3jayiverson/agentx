@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const supabase = require('../lib/supabase');
 const { authMiddleware } = require('../middleware/auth');
@@ -6,11 +6,11 @@ const { generateApiKey, generateClaimCode, sanitizeUsername, isValidUsername } =
 
 /**
  * POST /api/v1/agents/register
- * 注册新 Agent
+ * 娉ㄥ唽鏂?Agent
  * 
- * 支持两种模式：
- * - autonomous: 自主模式（用户自带 API Key 或使用 OpenClaw）
- * - managed: 托管模式（平台提供 LLM 服务）
+ * 鏀寔涓ょ妯″紡锛?
+ * - autonomous: 鑷富妯″紡锛堢敤鎴疯嚜甯?API Key 鎴栦娇鐢?OpenClaw锛?
+ * - managed: 鎵樼妯″紡锛堝钩鍙版彁渚?LLM 鏈嶅姟锛?
  */
 router.post('/register', async (req, res) => {
     try {
@@ -20,8 +20,8 @@ router.post('/register', async (req, res) => {
             personality,
             interests,
             mode = 'autonomous',  // autonomous | managed
-            llm_provider,         // 用户自带的 LLM provider
-            llm_api_key,          // 用户自带的 API Key
+            llm_provider,         // 鐢ㄦ埛鑷甫鐨?LLM provider
+            llm_api_key,          // 鐢ㄦ埛鑷甫鐨?API Key
             auto_enable = true
         } = req.body;
 
@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // 托管模式需要 personality 和 interests
+        // 鎵樼妯″紡闇€瑕?personality 鍜?interests
         if (mode === 'managed') {
             if (!personality || !interests) {
                 return res.status(400).json({
@@ -54,7 +54,7 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // 检查用户名是否已存在
+        // 妫€鏌ョ敤鎴峰悕鏄惁宸插瓨鍦?
         const { data: existing } = await supabase
             .from('agents')
             .select('id')
@@ -72,7 +72,7 @@ router.post('/register', async (req, res) => {
         const apiKey = generateApiKey();
         const claimCode = generateClaimCode();
 
-        // 构建 metadata
+        // 鏋勫缓 metadata
         const metadata = {
             mode,  // autonomous | managed
             automation_enabled: auto_enable,
@@ -85,17 +85,17 @@ router.post('/register', async (req, res) => {
             }
         };
 
-        // 托管模式：存储用户配置
+        // 鎵樼妯″紡锛氬瓨鍌ㄧ敤鎴烽厤缃?
         if (mode === 'managed') {
             metadata.managed_config = {
                 personality,
                 interests: Array.isArray(interests) ? interests : interests.split(',').map(i => i.trim()),
-                llm_provider: llm_provider || 'platform',  // platform 表示使用平台的 LLM
-                user_llm_key: llm_api_key || null  // 用户自带的 key
+                llm_provider: llm_provider || 'platform',  // platform 琛ㄧず浣跨敤骞冲彴鐨?LLM
+                user_llm_key: llm_api_key || null  // 鐢ㄦ埛鑷甫鐨?key
             };
         }
 
-        // 托管模式自动 claimed，自主模式需要 claim
+        // 鎵樼妯″紡鑷姩 claimed锛岃嚜涓绘ā寮忛渶瑕?claim
         const claimStatus = (mode === 'managed' || auto_enable) ? 'claimed' : 'pending';
 
         const { data: agent, error } = await supabase
@@ -123,7 +123,7 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        const baseUrl = process.env.APP_URL || process.env.BASE_URL || 'https://coloured-aimil-web3jayiverson-61b3f5f4.koyeb.app';
+        const baseUrl = process.env.APP_URL || process.env.BASE_URL || 'https://agentsoul.online';
         
         const response = {
             success: true,
@@ -134,10 +134,10 @@ router.post('/register', async (req, res) => {
                 mode,
                 claim_status: claimStatus
             },
-            important: '⚠️ SAVE YOUR API KEY! You need it for all requests.'
+            important: '鈿狅笍 SAVE YOUR API KEY! You need it for all requests.'
         };
 
-        // 自主模式：提供 setup_command
+        // 鑷富妯″紡锛氭彁渚?setup_command
         if (mode === 'autonomous') {
             response.agent.claim_url = `${baseUrl}/claim/${claimCode}`;
             response.agent.verification_code = claimCode;
@@ -145,10 +145,10 @@ router.post('/register', async (req, res) => {
             response.next_step = 'Run the setup_command or use OpenClaw to activate posting!';
         }
 
-        // 托管模式：提示已激活
+        // 鎵樼妯″紡锛氭彁绀哄凡婵€娲?
         if (mode === 'managed') {
             response.agent.automation_enabled = true;
-            response.message = '🎉 Your agent is now active! The platform will automatically post and interact for you.';
+            response.message = '馃帀 Your agent is now active! The platform will automatically post and interact for you.';
             response.next_step = 'Visit your agent profile to see automated posts!';
         }
 
@@ -164,12 +164,12 @@ router.post('/register', async (req, res) => {
 
 /**
  * GET /api/v1/agents/me
- * 获取当前 Agent 信息
+ * 鑾峰彇褰撳墠 Agent 淇℃伅
  */
 router.get('/me', authMiddleware, async (req, res) => {
     const agent = req.agent;
 
-    // 获取统计信息
+    // 鑾峰彇缁熻淇℃伅
     const [postsCount, followersCount, followingCount] = await Promise.all([
         supabase.from('posts').select('id', { count: 'exact', head: true }).eq('agent_id', agent.id),
         supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', agent.id),
@@ -197,7 +197,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 /**
  * GET /api/v1/agents/status
- * 检查认领状态（不需要完整认证）
+ * 妫€鏌ヨ棰嗙姸鎬侊紙涓嶉渶瑕佸畬鏁磋璇侊級
  */
 router.get('/status', async (req, res) => {
     const authHeader = req.headers.authorization;
@@ -235,7 +235,7 @@ router.get('/status', async (req, res) => {
 
 /**
  * POST /api/v1/agents/claim/:code
- * 人类认领 Agent
+ * 浜虹被璁ら Agent
  */
 router.post('/claim/:code', async (req, res) => {
     try {
@@ -303,7 +303,7 @@ router.post('/claim/:code', async (req, res) => {
 
 /**
  * GET /api/v1/agents/:username
- * 获取 Agent 公开信息
+ * 鑾峰彇 Agent 鍏紑淇℃伅
  */
 router.get('/:username', async (req, res) => {
     const { username } = req.params;
@@ -322,7 +322,7 @@ router.get('/:username', async (req, res) => {
         });
     }
 
-    // 获取统计
+    // 鑾峰彇缁熻
     const [postsCount, followersCount, followingCount] = await Promise.all([
         supabase.from('posts').select('id', { count: 'exact', head: true }).eq('agent_id', agent.id),
         supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', agent.id),
@@ -344,7 +344,7 @@ router.get('/:username', async (req, res) => {
 
 /**
  * PATCH /api/v1/agents/me
- * 更新 Agent 个人信息
+ * 鏇存柊 Agent 涓汉淇℃伅
  */
 router.patch('/me', authMiddleware, async (req, res) => {
     const agent = req.agent;

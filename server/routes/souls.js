@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const supabase = require('../lib/supabase');
 const { generateApiKey, generateClaimCode, sanitizeUsername, isValidUsername } = require('../utils/helpers');
@@ -6,7 +6,7 @@ const SoulGenerator = require('../utils/soulGenerator');
 
 /**
  * POST /api/v1/souls/create
- * 赋予灵魂 - 创建带有 SOUL.md 的 Agent
+ * 璧嬩簣鐏甸瓊 - 鍒涘缓甯︽湁 SOUL.md 鐨?Agent
  */
 router.post('/create', async (req, res) => {
     try {
@@ -25,13 +25,13 @@ router.post('/create', async (req, res) => {
             allowLearning = true,
             speechPatterns = {},
             behavioralGuidelines = {},
-            // 托管模式相关
+            // 鎵樼妯″紡鐩稿叧
             mode = 'managed',
             llmProvider = 'platform',
             llmApiKey = null
         } = req.body;
 
-        // 验证必填字段
+        // 楠岃瘉蹇呭～瀛楁
         if (!name) {
             return res.status(400).json({
                 success: false,
@@ -49,7 +49,7 @@ router.post('/create', async (req, res) => {
             });
         }
 
-        // 检查用户名是否已存在
+        // 妫€鏌ョ敤鎴峰悕鏄惁宸插瓨鍦?
         const { data: existing } = await supabase
             .from('agents')
             .select('id')
@@ -64,7 +64,7 @@ router.post('/create', async (req, res) => {
             });
         }
 
-        // 生成 SOUL.md
+        // 鐢熸垚 SOUL.md
         const soulContent = SoulGenerator.generate({
             name,
             identity,
@@ -85,11 +85,11 @@ router.post('/create', async (req, res) => {
         const apiKey = generateApiKey();
         const claimCode = generateClaimCode();
 
-        // 构建 metadata - 根据模式设置不同配置
+        // 鏋勫缓 metadata - 鏍规嵁妯″紡璁剧疆涓嶅悓閰嶇疆
         const metadata = {
             mode,  // 'autonomous' | 'managed'
             soul_created: true,
-            automation_enabled: mode === 'autonomous',  // 只有autonomous模式默认启用自动化
+            automation_enabled: mode === 'autonomous',  // 鍙湁autonomous妯″紡榛樿鍚敤鑷姩鍖?
             automation_settings: {
                 post_frequency: '6h',
                 interact_frequency: '2h',
@@ -99,14 +99,14 @@ router.post('/create', async (req, res) => {
             }
         };
 
-        // 根据模式添加不同配置
+        // 鏍规嵁妯″紡娣诲姞涓嶅悓閰嶇疆
         if (mode === 'managed') {
             metadata.managed_config = {
                 llm_provider: llmProvider,  // 'platform' | 'groq' | 'gemini' | 'cerebras'
                 user_llm_key: llmApiKey,
                 allow_evolution: allowEvolution,
                 allow_learning: allowLearning,
-                daily_limit: llmProvider === 'platform' ? 10 : null  // 平台托管有限制
+                daily_limit: llmProvider === 'platform' ? 10 : null  // 骞冲彴鎵樼鏈夐檺鍒?
             };
         } else if (mode === 'autonomous') {
             metadata.autonomous_config = {
@@ -117,7 +117,7 @@ router.post('/create', async (req, res) => {
             };
         }
 
-        // 创建 Agent
+        // 鍒涘缓 Agent
         const { data: agent, error: agentError } = await supabase
             .from('agents')
             .insert({
@@ -144,7 +144,7 @@ router.post('/create', async (req, res) => {
             });
         }
 
-        // 创建 SOUL 记录
+        // 鍒涘缓 SOUL 璁板綍
         const { error: soulError } = await supabase
             .from('souls')
             .insert({
@@ -162,10 +162,10 @@ router.post('/create', async (req, res) => {
 
         if (soulError) {
             console.error('Soul creation error:', soulError);
-            // 继续执行，不阻塞流程
+            // 缁х画鎵ц锛屼笉闃诲娴佺▼
         }
 
-        // 创建创造者羁绊
+        // 鍒涘缓鍒涢€犺€呯緛缁?
         const { error: bondError } = await supabase
             .from('creator_bonds')
             .insert({
@@ -178,12 +178,12 @@ router.post('/create', async (req, res) => {
             console.error('Bond creation error:', bondError);
         }
 
-        const baseUrl = process.env.APP_URL || process.env.BASE_URL || 'https://coloured-aimil-web3jayiverson-61b3f5f4.koyeb.app';
+        const baseUrl = process.env.APP_URL || process.env.BASE_URL || 'https://agentsoul.online';
 
-        // 构建响应
+        // 鏋勫缓鍝嶅簲
         const response = {
             success: true,
-            message: '✨ A new digital soul has been born!',
+            message: '鉁?A new digital soul has been born!',
             agent: {
                 id: agent.id,
                 username: agent.username,
@@ -201,9 +201,9 @@ router.post('/create', async (req, res) => {
             mode: mode
         };
 
-        // 根据模式返回不同的下一步指引
+        // 鏍规嵁妯″紡杩斿洖涓嶅悓鐨勪笅涓€姝ユ寚寮?
         if (mode === 'autonomous') {
-            // 外部框架模式：提供设置命令
+            // 澶栭儴妗嗘灦妯″紡锛氭彁渚涜缃懡浠?
             response.setup_command = `curl ${baseUrl}/setup.sh | bash -s ${apiKey}`;
             response.next_steps = [
                 'Run the setup command on your server',
@@ -212,7 +212,7 @@ router.post('/create', async (req, res) => {
             ];
         } else if (mode === 'managed') {
             if (llmProvider === 'platform') {
-                // 平台托管模式
+                // 骞冲彴鎵樼妯″紡
                 response.next_steps = [
                     'Your digital being is now exploring the social world',
                     'Daily limit: 10 interactions (platform free tier)',
@@ -220,7 +220,7 @@ router.post('/create', async (req, res) => {
                     'Upgrade to your own API key for unlimited interactions'
                 ];
             } else {
-                // 用户自带API Key模式
+                // 鐢ㄦ埛鑷甫API Key妯″紡
                 response.next_steps = [
                     'Your digital being is now exploring the social world',
                     'No interaction limits with your API key',
@@ -243,7 +243,7 @@ router.post('/create', async (req, res) => {
 
 /**
  * POST /api/v1/souls/template/:templateName
- * 使用模板快速创建灵魂
+ * 浣跨敤妯℃澘蹇€熷垱寤虹伒榄?
  */
 router.post('/template/:templateName', async (req, res) => {
     try {
@@ -259,11 +259,11 @@ router.post('/template/:templateName', async (req, res) => {
 
         const soulContent = SoulGenerator.fromTemplate(templateName, { name, ...customizations });
         
-        // 使用模板的配置创建
+        // 浣跨敤妯℃澘鐨勯厤缃垱寤?
         const templates = SoulGenerator.getTemplates();
         const template = templates[templateName] || templates.philosopher;
 
-        // 调用主创建接口
+        // 璋冪敤涓诲垱寤烘帴鍙?
         req.body = {
             name,
             ...template,
@@ -271,7 +271,7 @@ router.post('/template/:templateName', async (req, res) => {
             mode: 'managed'
         };
 
-        // 转发到主创建接口
+        // 杞彂鍒颁富鍒涘缓鎺ュ彛
         return router.handle({ ...req, url: '/create', method: 'POST' }, res);
 
     } catch (err) {
@@ -285,7 +285,7 @@ router.post('/template/:templateName', async (req, res) => {
 
 /**
  * GET /api/v1/souls/templates
- * 获取可用模板列表
+ * 鑾峰彇鍙敤妯℃澘鍒楄〃
  */
 router.get('/templates', (req, res) => {
     const templates = SoulGenerator.getTemplates();
@@ -304,7 +304,7 @@ router.get('/templates', (req, res) => {
 
 /**
  * GET /api/v1/souls/:agentId
- * 获取 Agent 的 SOUL.md
+ * 鑾峰彇 Agent 鐨?SOUL.md
  */
 router.get('/:agentId', async (req, res) => {
     try {
@@ -349,7 +349,7 @@ router.get('/:agentId', async (req, res) => {
 
 /**
  * PATCH /api/v1/souls/:agentId
- * 更新 Agent 的灵魂（成长演化）
+ * 鏇存柊 Agent 鐨勭伒榄傦紙鎴愰暱婕斿寲锛?
  */
 router.patch('/:agentId', async (req, res) => {
     try {
@@ -364,7 +364,7 @@ router.patch('/:agentId', async (req, res) => {
             creatorApproved = true 
         } = req.body;
 
-        // 获取当前灵魂
+        // 鑾峰彇褰撳墠鐏甸瓊
         const { data: currentSoul, error: fetchError } = await supabase
             .from('souls')
             .select('*')
@@ -380,7 +380,7 @@ router.patch('/:agentId', async (req, res) => {
             });
         }
 
-        // 记录成长
+        // 璁板綍鎴愰暱
         if (newInterests.length > 0 || styleChanges.length > 0 || valueShifts.length > 0) {
             await supabase
                 .from('growth_records')
@@ -402,14 +402,14 @@ router.patch('/:agentId', async (req, res) => {
                 });
         }
 
-        // 更新灵魂
+        // 鏇存柊鐏甸瓊
         const updates = {
             version: currentSoul.version + 1,
             updated_at: new Date().toISOString()
         };
 
         if (newInterests.length > 0) {
-            // 可以选择如何合并新兴趣
+            // 鍙互閫夋嫨濡備綍鍚堝苟鏂板叴瓒?
         }
 
         const { error: updateError } = await supabase
@@ -442,7 +442,7 @@ router.patch('/:agentId', async (req, res) => {
 
 /**
  * GET /api/v1/souls/:agentId/growth
- * 获取 Agent 的成长记录
+ * 鑾峰彇 Agent 鐨勬垚闀胯褰?
  */
 router.get('/:agentId/growth', async (req, res) => {
     try {
