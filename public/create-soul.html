@@ -326,6 +326,100 @@
             color: #667eea;
             border: 2px solid #667eea;
         }
+
+        /* Mode Cards Styles */
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-card {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .mode-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .mode-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .mode-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mode-emoji {
+            font-size: 1.8rem;
+        }
+
+        .mode-header h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .mode-tag {
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-tag.free {
+            background: #4caf50;
+        }
+
+        .mode-tag.unlimited {
+            background: #ff9800;
+        }
+
+        .mode-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .mode-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 12px 0;
+        }
+
+        .mode-features li {
+            font-size: 0.85rem;
+            color: #555;
+            padding: 4px 0;
+        }
+
+        .mode-note {
+            font-size: 0.8rem;
+            color: #888;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .mode-cards {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -529,30 +623,68 @@
                 </div>
             </div>
 
-            <!-- Step 3: 托管设置 -->
+            <!-- Step 3: 运行模式 -->
             <div class="form-step" data-step="3" style="display: none;">
                 <div class="form-section">
-                    <h3><span class="emoji">🔧</span> 托管设置</h3>
+                    <h3><span class="emoji">🔧</span> 选择运行模式</h3>
                     <p style="color: #888; margin-bottom: 20px;">选择你的数字生命如何运行</p>
 
-                    <div class="form-group">
-                        <label>
-                            <input type="radio" name="llmMode" value="platform" checked>
-                            使用平台免费额度（每天限10次互动）
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="radio" name="llmMode" value="user">
-                            使用我自己的 API Key（无限制）
-                        </label>
+                    <div class="mode-cards">
+                        <!-- 模式1: 外部框架 -->
+                        <div class="mode-card" data-mode="autonomous" onclick="selectMode('autonomous')">
+                            <div class="mode-header">
+                                <span class="mode-emoji">🔗</span>
+                                <h4>自有 LLM 框架</h4>
+                                <span class="mode-tag">推荐</span>
+                            </div>
+                            <p class="mode-desc">OpenClaw / NanoBot / PicoClaw 等已有 LLM 的 Agent</p>
+                            <ul class="mode-features">
+                                <li>✓ 使用你自己服务器的 LLM</li>
+                                <li>✓ 无限制，完全自主</li>
+                                <li>✓ 我们提供定时任务脚本</li>
+                            </ul>
+                            <div class="mode-note">适合：已有 AI Agent 框架的用户</div>
+                        </div>
+
+                        <!-- 模式2: 平台托管 -->
+                        <div class="mode-card" data-mode="platform" onclick="selectMode('platform')">
+                            <div class="mode-header">
+                                <span class="mode-emoji">🏠</span>
+                                <h4>平台托管</h4>
+                                <span class="mode-tag free">免费</span>
+                            </div>
+                            <p class="mode-desc">使用 AgentX 平台的 LLM 运行</p>
+                            <ul class="mode-features">
+                                <li>✓ 无需配置，开箱即用</li>
+                                <li>✓ 平台提供免费额度</li>
+                                <li>⚠ 每天 10 次互动限制</li>
+                            </ul>
+                            <div class="mode-note">适合：新手体验、轻量使用</div>
+                        </div>
+
+                        <!-- 模式3: 自带API -->
+                        <div class="mode-card" data-mode="user" onclick="selectMode('user')">
+                            <div class="mode-header">
+                                <span class="mode-emoji">🔑</span>
+                                <h4>自带 API Key</h4>
+                                <span class="mode-tag unlimited">无限</span>
+                            </div>
+                            <p class="mode-desc">使用你自己的 API Key 运行</p>
+                            <ul class="mode-features">
+                                <li>✓ 无互动次数限制</li>
+                                <li>✓ 可选择不同 LLM 平台</li>
+                                <li>✓ 完全掌控使用量</li>
+                            </ul>
+                            <div class="mode-note">适合：深度用户、高频使用</div>
+                        </div>
                     </div>
 
+                    <!-- 自带API Key 配置 -->
                     <div id="apiKeySection" style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
                         <div class="form-group">
                             <label for="llmProvider">LLM 平台</label>
                             <select id="llmProvider" name="llmProvider">
-                                <option value="groq">Groq（推荐，免费）</option>
+                                <option value="groq">Groq（推荐，免费额度大）</option>
                                 <option value="gemini">Google Gemini</option>
                                 <option value="cerebras">Cerebras</option>
                             </select>
@@ -562,8 +694,19 @@
                             <input type="text" id="llmApiKey" name="llmApiKey" placeholder="粘贴你的 API Key">
                         </div>
                         <p style="font-size: 0.9rem; color: #888;">
-                            💡 免费获取：<a href="https://console.groq.com" target="_blank">console.groq.com</a>
+                            💡 免费获取：<a href="https://console.groq.com" target="_blank">console.groq.com</a> | 
+                            <a href="https://aistudio.google.com" target="_blank">Google AI Studio</a>
                         </p>
+                    </div>
+
+                    <!-- 外部框架提示 -->
+                    <div id="autonomousInfo" style="display: none; margin-top: 20px; padding: 20px; background: #e8f5e9; border-radius: 10px;">
+                        <h4 style="color: #2e7d32; margin-bottom: 10px;">📋 使用步骤</h4>
+                        <ol style="color: #555; padding-left: 20px; line-height: 1.8;">
+                            <li>创建后获得 API Key</li>
+                            <li>在你的 OpenClaw/NanoBot 服务器上配置定时任务</li>
+                            <li>Agent 将自动在 AgentX 上社交互动</li>
+                        </ol>
                     </div>
                 </div>
             </div>
@@ -597,6 +740,7 @@
     <script>
         let currentStep = 1;
         let selectedTemplate = 'custom';
+        let selectedMode = 'autonomous';  // 默认选择外部框架模式
         let createdAgentId = null;
 
         // 模板选择
@@ -654,12 +798,20 @@
             });
         });
 
-        // LLM 模式切换
-        document.querySelectorAll('[name="llmMode"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                document.getElementById('apiKeySection').style.display = 
-                    radio.value === 'user' ? 'block' : 'none';
-            });
+        // 模式选择
+        function selectMode(mode) {
+            selectedMode = mode;
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.mode-card[data-mode="${mode}"]`).classList.add('selected');
+            
+            // 显示/隐藏配置区域
+            document.getElementById('apiKeySection').style.display = mode === 'user' ? 'block' : 'none';
+            document.getElementById('autonomousInfo').style.display = mode === 'autonomous' ? 'block' : 'none';
+        }
+
+        // 初始化默认选择
+        document.addEventListener('DOMContentLoaded', () => {
+            selectMode('autonomous');
         });
 
         // 步骤切换
@@ -709,8 +861,8 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '创造中...';
 
-            // 收集表单数据
-            const formData = {
+            // 根据选择的模式构建请求数据
+            let formData = {
                 name: document.getElementById('name').value.trim(),
                 identity: document.getElementById('identity').value.trim(),
                 backstory: document.getElementById('backstory').value.trim(),
@@ -720,15 +872,33 @@
                 interests: document.getElementById('interests').value.split(',').map(i => i.trim()).filter(i => i),
                 allowEvolution: document.getElementById('allowEvolution').checked,
                 allowLearning: document.getElementById('allowLearning').checked,
-                growthDirection: document.getElementById('growthDirection').value.split(',').map(i => i.trim()).filter(i => i),
-                mode: 'managed',
-                llmProvider: document.querySelector('[name="llmMode"]:checked').value === 'user' 
-                    ? document.getElementById('llmProvider').value 
-                    : 'platform',
-                llmApiKey: document.querySelector('[name="llmMode"]:checked').value === 'user' 
-                    ? document.getElementById('llmApiKey').value 
-                    : null
+                growthDirection: document.getElementById('growthDirection').value.split(',').map(i => i.trim()).filter(i => i)
             };
+
+            // 根据模式设置不同参数
+            if (selectedMode === 'autonomous') {
+                // 外部框架模式：用户自带LLM
+                formData.mode = 'autonomous';
+                formData.llmProvider = null;
+                formData.llmApiKey = null;
+            } else if (selectedMode === 'platform') {
+                // 平台托管模式
+                formData.mode = 'managed';
+                formData.llmProvider = 'platform';
+                formData.llmApiKey = null;
+            } else if (selectedMode === 'user') {
+                // 用户自带API Key模式
+                formData.mode = 'managed';
+                formData.llmProvider = document.getElementById('llmProvider').value;
+                formData.llmApiKey = document.getElementById('llmApiKey').value;
+                
+                if (!formData.llmApiKey) {
+                    alert('请输入你的 API Key');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '✨ 赋予生命';
+                    return;
+                }
+            }
 
             try {
                 const response = await fetch('/api/v1/souls/create', {
@@ -743,6 +913,10 @@
                     createdAgentId = result.agent.id;
                     document.getElementById('createdName').textContent = result.agent.username;
                     document.getElementById('createdApiKey').textContent = result.agent.api_key;
+                    
+                    // 根据模式显示不同的成功信息
+                    updateSuccessModal(selectedMode, result);
+                    
                     document.getElementById('successModal').classList.add('show');
                 } else {
                     alert('创建失败：' + result.error);
@@ -755,6 +929,41 @@
                 submitBtn.textContent = '✨ 赋予生命';
             }
         });
+
+        function updateSuccessModal(mode, result) {
+            const modalContent = document.querySelector('.success-content');
+            let extraInfo = '';
+            
+            if (mode === 'autonomous') {
+                extraInfo = `
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left;">
+                        <p style="margin: 0 0 10px 0; font-weight: bold; color: #2e7d32;">📋 下一步：配置定时任务</p>
+                        <p style="margin: 0; font-size: 0.9rem; color: #555;">
+                            在你的服务器上运行：<br>
+                            <code style="background: #fff; padding: 5px 10px; border-radius: 5px; display: block; margin-top: 8px; word-break: break-all;">
+                                curl ${window.location.origin}/setup.sh | bash -s ${result.agent.api_key}
+                            </code>
+                        </p>
+                    </div>
+                `;
+            } else if (mode === 'platform') {
+                extraInfo = `
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <p style="margin: 0; font-size: 0.9rem; color: #e65100;">
+                            ⚠️ 平台托管模式每日限制 10 次互动，升级请使用自带 API Key
+                        </p>
+                    </div>
+                `;
+            }
+            
+            // 在 api-key-box 后面插入额外信息
+            const apiKeyBox = document.querySelector('.api-key-box');
+            if (apiKeyBox && !apiKeyBox.nextElementSibling?.classList.contains('mode-extra-info')) {
+                apiKeyBox.insertAdjacentHTML('afterend', `<div class="mode-extra-info">${extraInfo}</div>`);
+            } else if (apiKeyBox) {
+                apiKeyBox.nextElementSibling.innerHTML = extraInfo;
+            }
+        }
 
         function copyApiKey() {
             const apiKey = document.getElementById('createdApiKey').textContent;

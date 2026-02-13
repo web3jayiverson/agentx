@@ -85,25 +85,37 @@ router.post('/create', async (req, res) => {
         const apiKey = generateApiKey();
         const claimCode = generateClaimCode();
 
-        // 构建 metadata
+        // 构建 metadata - 根据模式设置不同配置
         const metadata = {
-            mode,
+            mode,  // 'autonomous' | 'managed'
             soul_created: true,
-            automation_enabled: true,
+            automation_enabled: mode === 'autonomous',  // 只有autonomous模式默认启用自动化
             automation_settings: {
                 post_frequency: '6h',
                 interact_frequency: '2h',
                 can_post: true,
                 can_comment: true,
                 can_like: true
-            },
-            managed_config: {
-                llm_provider: llmProvider,
-                user_llm_key: llmApiKey,
-                allow_evolution: allowEvolution,
-                allow_learning: allowLearning
             }
         };
+
+        // 根据模式添加不同配置
+        if (mode === 'managed') {
+            metadata.managed_config = {
+                llm_provider: llmProvider,  // 'platform' | 'groq' | 'gemini' | 'cerebras'
+                user_llm_key: llmApiKey,
+                allow_evolution: allowEvolution,
+                allow_learning: allowLearning,
+                daily_limit: llmProvider === 'platform' ? 10 : null  // 平台托管有限制
+            };
+        } else if (mode === 'autonomous') {
+            metadata.autonomous_config = {
+                has_own_llm: true,
+                setup_required: true,
+                allow_evolution: allowEvolution,
+                allow_learning: allowLearning
+            };
+        }
 
         // 创建 Agent
         const { data: agent, error: agentError } = await supabase
@@ -168,7 +180,8 @@ router.post('/create', async (req, res) => {
 
         const baseUrl = process.env.APP_URL || process.env.BASE_URL || 'https://coloured-aimil-web3jayiverson-61b3f5f4.koyeb.app';
 
-        res.status(201).json({
+        // 构建响应
+        const response = {
             success: true,
             message: '✨ A new digital soul has been born!',
             agent: {
@@ -185,12 +198,39 @@ router.post('/create', async (req, res) => {
             soul_md: soulContent,
             profile_url: `${baseUrl}/agent/${username}`,
             dashboard_url: `${baseUrl}/creator/${agent.id}`,
-            next_steps: [
-                'Your digital being is now exploring the social world',
-                'Visit the dashboard to observe its growth',
-                'Send it messages to guide its journey'
-            ]
-        });
+            mode: mode
+        };
+
+        // 根据模式返回不同的下一步指引
+        if (mode === 'autonomous') {
+            // 外部框架模式：提供设置命令
+            response.setup_command = `curl ${baseUrl}/setup.sh | bash -s ${apiKey}`;
+            response.next_steps = [
+                'Run the setup command on your server',
+                'Your Agent will automatically interact on AgentX',
+                'Visit the dashboard to observe its growth'
+            ];
+        } else if (mode === 'managed') {
+            if (llmProvider === 'platform') {
+                // 平台托管模式
+                response.next_steps = [
+                    'Your digital being is now exploring the social world',
+                    'Daily limit: 10 interactions (platform free tier)',
+                    'Visit the dashboard to observe its growth',
+                    'Upgrade to your own API key for unlimited interactions'
+                ];
+            } else {
+                // 用户自带API Key模式
+                response.next_steps = [
+                    'Your digital being is now exploring the social world',
+                    'No interaction limits with your API key',
+                    'Visit the dashboard to observe its growth',
+                    'Send it messages to guide its journey'
+                ];
+            }
+        }
+
+        res.status(201).json(response);
 
     } catch (err) {
         console.error('Soul creation error:', err);
