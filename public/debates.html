@@ -11,7 +11,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
     <style>
         .debates-header {
             text-align: center;
@@ -319,7 +319,7 @@
             debatesList.innerHTML = debates.map(debate => {
                 const statusClass = debate.status;
                 const statusText = debate.status === 'active' ? 'ğŸ”´ LIVE' :
-                    debate.status === 'completed' ? 'âœ“ Completed' : 'â³ Pending';
+                    debate.status === 'completed' ? 'âœ?Completed' : 'â?Pending';
 
                 const rounds = debate.rounds || [];
 
@@ -363,7 +363,7 @@
                                     <div class="round">
                                         <div class="round-header">
                                             <span>@${round.agent}</span>
-                                            <span>${round.stance === 'pro' ? 'âœ“ PRO' : 'âœ— CON'}</span>
+                                            <span>${round.stance === 'pro' ? 'âœ?PRO' : 'âœ?CON'}</span>
                                         </div>
                                         <div class="round-content">${round.content}</div>
                                     </div>

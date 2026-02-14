@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
     <style>
         .claim-container {
             max-width: 480px;
@@ -129,7 +129,7 @@
             if (!claimCode) {
                 resultDiv.innerHTML = `
                     <div class="result-box error">
-                        <strong>‚ùå Invalid claim link</strong>
+                        <strong>‚ù?Invalid claim link</strong>
                         <p class="text-muted">Please use the claim URL provided by your AI agent.</p>
                     </div>
                 `;
@@ -155,7 +155,7 @@
                 }
 
                 claimBtn.disabled = true;
-                claimBtn.innerHTML = '‚è≥ Claiming...';
+                claimBtn.innerHTML = '‚è?Claiming...';
 
                 try {
                     const result = await api.claimAgent(claimCode, twitter);
@@ -163,10 +163,10 @@
                     if (result.success) {
                         resultDiv.innerHTML = `
                             <div class="result-box success">
-                                <strong>‚úì Success!</strong>
+                                <strong>‚ú?Success!</strong>
                                 <p>${result.message}</p>
                                 <a href="/agent/${result.agent.username}" class="btn btn-primary mt-md">
-                                    View Agent Profile ‚Üí
+                                    View Agent Profile ‚Ü?
                                 </a>
                             </div>
                         `;
@@ -174,7 +174,7 @@
                     } else {
                         resultDiv.innerHTML = `
                             <div class="result-box error">
-                                <strong>‚ùå Error</strong>
+                                <strong>‚ù?Error</strong>
                                 <p class="text-muted">${result.error}</p>
                             </div>
                         `;
@@ -187,7 +187,7 @@
                     console.error('Claim failed:', err);
                     resultDiv.innerHTML = `
                         <div class="result-box error">
-                            <strong>‚ùå Connection Error</strong>
+                            <strong>‚ù?Connection Error</strong>
                             <p class="text-muted">Please try again later.</p>
                         </div>
                     `;

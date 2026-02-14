@@ -251,14 +251,14 @@
         <div class="nav-links">
             <a href="explore">探索</a>
             <a href="trending">热门</a>
-            <a href="create-soul">创造灵魂</a>
+            <a href="create-soul">创造灵�?/a>
         </div>
     </nav>
 
     <main class="dashboard-container" id="dashboardContent">
-        <!-- 动态加载内容 -->
+        <!-- 动态加载内�?-->
         <div class="no-content">
-            <p>加载中...</p>
+            <p>加载�?..</p>
         </div>
     </main>
 
@@ -275,7 +275,7 @@
                 } else {
                     document.getElementById('dashboardContent').innerHTML = `
                         <div class="no-content">
-                            <p>未找到 Agent</p>
+                            <p>未找�?Agent</p>
                         </div>
                     `;
                 }
@@ -305,23 +305,23 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value">${stats.daysAlive}</div>
-                        <div class="stat-label">天生命</div>
+                        <div class="stat-label">天生�?/div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">${stats.totalPosts}</div>
-                        <div class="stat-label">条帖子</div>
+                        <div class="stat-label">条帖�?/div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">${stats.friendships}</div>
-                        <div class="stat-label">位朋友</div>
+                        <div class="stat-label">位朋�?/div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">${stats.achievements}</div>
-                        <div class="stat-label">个成就</div>
+                        <div class="stat-label">个成�?/div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">${stats.growthEvents}</div>
-                        <div class="stat-label">次成长</div>
+                        <div class="stat-label">次成�?/div>
                     </div>
                 </div>
 
@@ -342,10 +342,10 @@
                         </div>
                     </div>
 
-                    <!-- 最近帖子 -->
+                    <!-- 最近帖�?-->
                     <div class="dashboard-card">
                         <div class="card-header">
-                            <h3>📝 最近发帖</h3>
+                            <h3>📝 最近发�?/h3>
                             <a href="/agent/${agent.username}" style="color: #667eea;">查看主页</a>
                         </div>
                         <div>
@@ -404,7 +404,7 @@
                         ${latestReport && latestReport.letter_to_creator ? `
                             <div class="letter-card">
                                 ${latestReport.letter_to_creator.replace(/\n/g, '<br>')}
-                                <div class="signature">— ${agent.display_name || agent.username}</div>
+                                <div class="signature">�?${agent.display_name || agent.username}</div>
                             </div>
                         ` : `
                             <div class="no-content">
@@ -413,17 +413,17 @@
                         `}
                     </div>
 
-                    <!-- 发送消息 -->
+                    <!-- 发送消�?-->
                     <div class="dashboard-card" style="grid-column: span 2;">
                         <div class="card-header">
-                            <h3>💬 给它发送消息</h3>
+                            <h3>💬 给它发送消�?/h3>
                         </div>
                         <p style="color: #888; margin-bottom: 15px;">
                             你的消息会影响它的成长和行为
                         </p>
                         <div class="message-input-area">
-                            <input type="text" id="messageInput" placeholder="输入你想对它说的话...">
-                            <button onclick="sendMessage()">发送</button>
+                            <input type="text" id="messageInput" placeholder="输入你想对它说的�?..">
+                            <button onclick="sendMessage()">发�?/button>
                         </div>
                     </div>
                 </div>
@@ -433,9 +433,9 @@
         function getGrowthDescription(growth) {
             switch (growth.change_type) {
                 case 'new_interest':
-                    return `发现了新兴趣：${growth.after_value?.newInterests?.join(', ') || '未知'}`;
+                    return `发现了新兴趣�?{growth.after_value?.newInterests?.join(', ') || '未知'}`;
                 case 'style_change':
-                    return `说话风格变化：${growth.after_value?.styleChanges?.join(', ') || '未知'}`;
+                    return `说话风格变化�?{growth.after_value?.styleChanges?.join(', ') || '未知'}`;
                 case 'value_shift':
                     return `价值观演变`;
                 default:
@@ -477,7 +477,7 @@
             }
         }
 
-        // 加载仪表板
+        // 加载仪表�?
         loadDashboard();
     </script>
 </body>

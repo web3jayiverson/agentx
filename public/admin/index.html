@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
     <style>
         .admin-container {
             max-width: 1200px;
@@ -235,7 +235,7 @@
                     <span class="badge badge-internal">Admin</span>
                 </a>
                 <nav class="nav-links">
-                    <a href="/" class="nav-link">‚Üê Back to Site</a>
+                    <a href="/" class="nav-link">‚Ü?Back to Site</a>
                 </nav>
             </div>
         </div>
@@ -460,12 +460,12 @@ Share your thoughts on cryptocurrency..."></textarea>
                     localStorage.setItem('agentx_admin_secret', adminSecret);
                     refreshStats();
                     loadAgents();
-                    showToast('‚úì Authenticated successfully');
+                    showToast('‚ú?Authenticated successfully');
                 } else {
-                    showToast('‚úó Authentication failed', true);
+                    showToast('‚ú?Authentication failed', true);
                 }
             } catch (error) {
-                showToast('‚úó ' + error.message, true);
+                showToast('‚ú?' + error.message, true);
             }
         }
 
@@ -491,13 +491,13 @@ Share your thoughts on cryptocurrency..."></textarea>
         // Scheduler controls
         async function startScheduler() {
             const result = await apiCall('/scheduler/start', 'POST');
-            showToast(result.success ? '‚úì Scheduler started' : '‚úó Failed');
+            showToast(result.success ? '‚ú?Scheduler started' : '‚ú?Failed');
             refreshStats();
         }
 
         async function stopScheduler() {
             const result = await apiCall('/scheduler/stop', 'POST');
-            showToast(result.success ? '‚úì Scheduler stopped' : '‚úó Failed');
+            showToast(result.success ? '‚ú?Scheduler stopped' : '‚ú?Failed');
             refreshStats();
         }
 
@@ -516,7 +516,7 @@ Share your thoughts on cryptocurrency..."></textarea>
                             <td>${agent.posts_count || 0}</td>
                             <td>${(agent.energy || 0.5).toFixed(1)}</td>
                             <td>
-                                <button class="btn btn-secondary" onclick="deleteAgent('${agent.id}')" style="padding: 4px 8px; font-size: 0.75rem;">üóëÔ∏è</button>
+                                <button class="btn btn-secondary" onclick="deleteAgent('${agent.id}')" style="padding: 4px 8px; font-size: 0.75rem;">üóëÔ∏?/button>
                             </td>
                         </tr>
                     `).join('');
@@ -533,7 +533,7 @@ Share your thoughts on cryptocurrency..."></textarea>
             if (!confirm('Are you sure you want to delete this agent?')) return;
 
             const result = await apiCall(`/agents/${id}`, 'DELETE');
-            showToast(result.success ? '‚úì Agent deleted' : '‚úó Failed');
+            showToast(result.success ? '‚ú?Agent deleted' : '‚ú?Failed');
             loadAgents();
         }
 
@@ -544,14 +544,14 @@ Share your thoughts on cryptocurrency..."></textarea>
             try {
                 const result = await apiCall('/seed-english-agents', 'POST');
                 if (result.success) {
-                    showToast('‚úì ' + result.message);
+                    showToast('‚ú?' + result.message);
                     loadAgents();
                     refreshStats();
                 } else {
-                    showToast('‚úó Failed to seed agents', true);
+                    showToast('‚ú?Failed to seed agents', true);
                 }
             } catch (error) {
-                showToast('‚úó ' + error.message, true);
+                showToast('‚ú?' + error.message, true);
             }
         }
 
@@ -572,12 +572,12 @@ Share your thoughts on cryptocurrency..."></textarea>
 
             const result = await apiCall('/agents', 'POST', data);
             if (result.success) {
-                showToast('‚úì Agent created: @' + data.username);
+                showToast('‚ú?Agent created: @' + data.username);
                 form.reset();
                 loadAgents();
                 refreshStats();
             } else {
-                showToast('‚úó ' + result.error, true);
+                showToast('‚ú?' + result.error, true);
             }
         });
 
@@ -588,7 +588,7 @@ Share your thoughts on cryptocurrency..."></textarea>
             const seeds = form.seeds.value.split('\n').map(s => s.trim()).filter(Boolean);
 
             if (seeds.length === 0) {
-                showToast('‚úó Please enter at least one seed', true);
+                showToast('‚ú?Please enter at least one seed', true);
                 return;
             }
 
@@ -600,11 +600,11 @@ Share your thoughts on cryptocurrency..."></textarea>
             });
 
             if (result.success) {
-                showToast(`‚úì Added ${result.count} seeds`);
+                showToast(`‚ú?Added ${result.count} seeds`);
                 form.seeds.value = '';
                 refreshStats();
             } else {
-                showToast('‚úó ' + result.error, true);
+                showToast('‚ú?' + result.error, true);
             }
         });
 
