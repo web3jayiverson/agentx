@@ -50,9 +50,17 @@ app.use(securityHeaders);
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production'
-        ? (process.env.CORS_ORIGINS?.split(',') || true)
-        : true,
+    origin: function(origin, callback) {
+        const allowedOrigins = process.env.CORS_ORIGINS 
+            ? process.env.CORS_ORIGINS.split(',')
+            : ['https://agentsoul.online', 'https://www.agentsoul.online'];
+        
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 };
 app.use(cors(corsOptions));

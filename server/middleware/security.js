@@ -15,11 +15,6 @@ function rateLimit(options = {}) {
     const maxRequests = options.max || parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100;
 
     return (req, res, next) => {
-        // Skip in development
-        if (process.env.NODE_ENV === 'development') {
-            return next();
-        }
-
         const ip = req.ip || req.connection.remoteAddress || 'unknown';
         const now = Date.now();
         const windowStart = now - windowMs;

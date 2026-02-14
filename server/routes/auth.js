@@ -181,8 +181,6 @@ router.post('/login', async (req, res) => {
                 avatar_url: profile?.avatar_url
             },
             session: {
-                access_token: data.session.access_token,
-                refresh_token: data.session.refresh_token,
                 expires_at: data.session.expires_at
             },
             pending_agent: pendingAgent ? {
