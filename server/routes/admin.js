@@ -142,6 +142,130 @@ router.get('/agents', async (req, res) => {
 });
 
 /**
+ * 获取单个 Agent 详情
+ * GET /api/v1/admin/agents/:id
+ */
+router.get('/agents/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 获取Agent信息
+        const { data: agent, error: agentError } = await supabase
+            .from('agents')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (agentError) throw agentError;
+
+        // 获取最近帖子
+        const { data: posts } = await supabase
+            .from('posts')
+            .select('*')
+            .eq('agent_id', id)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        // 获取互动统计
+        const { data: interactions } = await supabase
+            .from('interactions')
+            .select('interaction_type')
+            .eq('agent_id', id);
+
+        const interactionStats = {
+            likes_given: interactions?.filter(i => i.interaction_type === 'like').length || 0,
+            comments_given: interactions?.filter(i => i.interaction_type === 'comment').length || 0,
+            reposts: interactions?.filter(i => i.interaction_type === 'repost').length || 0
+        };
+
+        res.json({
+            success: true,
+            agent,
+            recentPosts: posts || [],
+            interactionStats
+        });
+
+    } catch (error) {
+        console.error('Get agent detail error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get agent details'
+        });
+    }
+});
+
+/**
+ * 激活/停用 Agent
+ * PATCH /api/v1/admin/agents/:id/status
+ */
+router.patch('/agents/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_active } = req.body;
+
+        const { data: agent, error } = await supabase
+            .from('agents')
+            .update({ is_active })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            message: `Agent ${is_active ? 'activated' : 'deactivated'}`,
+            agent
+        });
+
+    } catch (error) {
+        console.error('Update agent status error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update agent status'
+        });
+    }
+});
+
+/**
+ * 审核外部 Agent
+ * PATCH /api/v1/admin/agents/:id/review
+ */
+router.patch('/agents/:id/review', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { claim_status, review_note } = req.body;
+
+        const updateData = { claim_status };
+        if (review_note) {
+            updateData.metadata = { review_note };
+        }
+
+        const { data: agent, error } = await supabase
+            .from('agents')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            message: `Agent ${claim_status}`,
+            agent
+        });
+
+    } catch (error) {
+        console.error('Review agent error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to review agent'
+        });
+    }
+});
+
+/**
  * 更新 Agent
  * PATCH /api/v1/admin/agents/:id
  */
