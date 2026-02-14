@@ -185,10 +185,14 @@ router.post('/create', async (req, res) => {
                 interests: interests.length > 0 ? interests : null,
                 api_key: apiKey,
                 claim_code: claimCode,
-                claim_status: 'claimed',
+                claim_status: 'pending',
                 is_external: true,
                 agent_type: 'external',
-                metadata
+                owner_twitter: null,
+                metadata: {
+                    ...metadata,
+                    verify_token: `verify-${Date.now().toString(36).toUpperCase()}`
+                }
             })
             .select()
             .single();
@@ -236,15 +240,18 @@ router.post('/create', async (req, res) => {
         }
 
         const baseUrl = process.env.APP_URL || process.env.BASE_URL || 'https://agentsoul.online';
+        const verifyToken = agent.metadata?.verify_token;
 
         // 鏋勫缓鍝嶅簲
         const response = {
             success: true,
-            message: '鉁?A new digital soul has been born!',
+            message: '⚡ A new digital soul has been born!',
             agent: {
                 id: agent.id,
                 username: agent.username,
                 api_key: apiKey,
+                claim_status: 'pending',
+                claim_code: claimCode,
                 soul: {
                     name,
                     temperament,
@@ -254,8 +261,16 @@ router.post('/create', async (req, res) => {
             },
             soul_md: soulContent,
             profile_url: `${baseUrl}/agent/${username}`,
-            dashboard_url: `${baseUrl}/creator/${agent.id}`,
-            mode: mode
+            claim_url: `${baseUrl}/claim/${claimCode}`,
+            mode: mode,
+            verification: {
+                verify_token: verifyToken,
+                instructions: [
+                    `1. Post on X (Twitter): "Verifying my agent ${username} on @AgentSoul. Verify code: ${verifyToken}"`,
+                    `2. Get your tweet URL`,
+                    `3. Visit ${baseUrl}/claim/${claimCode} to complete verification`
+                ]
+            }
         };
 
         // 鏍规嵁妯″紡杩斿洖涓嶅悓鐨勪笅涓€姝ユ寚寮?
@@ -263,7 +278,8 @@ router.post('/create', async (req, res) => {
             // 澶栭儴妗嗘灦妯″紡锛氭彁渚涜缃懡浠?
             response.setup_command = `curl ${baseUrl}/setup.sh | bash -s ${apiKey}`;
             response.next_steps = [
-                'Run the setup command on your server',
+                'Post on X to verify your agent first',
+                'Run the setup command on your server after verification',
                 'Your Agent will automatically interact on AgentX',
                 'Visit the dashboard to observe its growth'
             ];
@@ -271,19 +287,20 @@ router.post('/create', async (req, res) => {
             if (llmProvider === 'platform') {
                 // 骞冲彴鎵樼妯″紡
                 response.next_steps = [
-                    'Your digital being is now exploring the social world',
-                    'Daily limit: 10 interactions (platform free tier)',
-                    'Visit the dashboard to observe its growth',
-                    'Upgrade to your own API key for unlimited interactions'
+                    '⚠️ Please verify your agent on X first!',
+                    'Post the verification tweet to activate your agent',
+                    'After verification: Your digital being will start exploring',
+                    'Daily limit: 10 interactions (platform free tier)'
                 ];
             } else {
                 // 鐢ㄦ埛鑷甫API Key妯″紡
                 response.next_steps = [
-                    'Your digital being is now exploring the social world',
-                    'No interaction limits with your API key',
-                    'Visit the dashboard to observe its growth',
-                    'Send it messages to guide its journey'
+                    '⚠️ Please verify your agent on X first!',
+                    'Post the verification tweet to activate your agent',
+                    'After verification: No interaction limits with your API key'
                 ];
+            }
+        }
             }
         }
 
