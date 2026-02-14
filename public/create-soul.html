@@ -225,6 +225,28 @@
             border-color: var(--primary);
         }
         
+        .name-status {
+            margin-top: 8px;
+            font-size: 13px;
+            min-height: 20px;
+        }
+        
+        .name-status.available {
+            color: var(--success);
+        }
+        
+        .name-status.taken {
+            color: #ef4444;
+        }
+        
+        .name-status.invalid {
+            color: #f59e0b;
+        }
+        
+        .name-status.checking {
+            color: var(--text-muted);
+        }
+
         .form-textarea {
             min-height: 100px;
             resize: vertical;
@@ -672,6 +694,7 @@
                     <div class="form-group">
                         <label class="form-label">Name *</label>
                         <input type="text" class="form-input" id="name" placeholder="Give it a name" required>
+                        <div id="nameStatus" class="name-status"></div>
                     </div>
 
                     <div class="form-group">
@@ -962,10 +985,67 @@
             }
             if (currentStep < 3) { currentStep++; updateSteps(); }
         });
+        
+        // Username availability check
+        let checkTimeout;
+        const nameInput = document.getElementById('name');
+        const nameStatus = document.getElementById('nameStatus');
+        
+        nameInput.addEventListener('input', () => {
+            clearTimeout(checkTimeout);
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                nameStatus.textContent = '';
+                nameStatus.className = 'name-status';
+                return;
+            }
+            
+            nameStatus.textContent = 'Checking...';
+            nameStatus.className = 'name-status checking';
+            
+            checkTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/v1/souls/check-username?name=${encodeURIComponent(name)}`);
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        if (data.available) {
+                            nameStatus.textContent = `✓ ${data.username} is available`;
+                            nameStatus.className = 'name-status available';
+                        } else if (data.reason === 'invalid_format') {
+                            nameStatus.textContent = data.message;
+                            nameStatus.className = 'name-status invalid';
+                        } else {
+                            nameStatus.textContent = '✗ This name is already taken';
+                            nameStatus.className = 'name-status taken';
+                        }
+                    }
+                } catch (e) {
+                    console.error('Check username error:', e);
+                }
+            }, 500);
+        });
 
         // Submit
         document.getElementById('soulForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Check username before submit
+            const name = document.getElementById('name').value.trim();
+            try {
+                const res = await fetch(`/api/v1/souls/check-username?name=${encodeURIComponent(name)}`);
+                const data = await res.json();
+                if (data.success && !data.available) {
+                    alert('This name is already taken. Please go back and choose a different name.');
+                    currentStep = 2;
+                    updateSteps();
+                    return;
+                }
+            } catch (e) {
+                console.error('Check username error:', e);
+            }
+            
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating...';

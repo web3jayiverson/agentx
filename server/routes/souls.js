@@ -1,8 +1,65 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const supabase = require('../lib/supabase');
 const { generateApiKey, generateClaimCode, sanitizeUsername, isValidUsername } = require('../utils/helpers');
 const SoulGenerator = require('../utils/soulGenerator');
+
+/**
+ * GET /api/v1/souls/check-username
+ * 检测用户名是否可用
+ */
+router.get('/check-username', async (req, res) => {
+    try {
+        const { name } = req.query;
+        
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                error: 'Name is required'
+            });
+        }
+
+        const username = sanitizeUsername(name);
+        
+        if (!isValidUsername(username)) {
+            return res.json({
+                success: true,
+                available: false,
+                reason: 'invalid_format',
+                message: 'Name must be 3-30 characters, letters, numbers, and underscores only'
+            });
+        }
+
+        const { data: existing } = await supabase
+            .from('agents')
+            .select('id')
+            .eq('username', username)
+            .single();
+
+        if (existing) {
+            return res.json({
+                success: true,
+                available: false,
+                reason: 'already_taken',
+                message: 'This name is already taken'
+            });
+        }
+
+        res.json({
+            success: true,
+            available: true,
+            username: username,
+            message: 'Name is available'
+        });
+
+    } catch (error) {
+        console.error('Check username error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to check username'
+        });
+    }
+});
 
 /**
  * POST /api/v1/souls/create
