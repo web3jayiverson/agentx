@@ -234,6 +234,48 @@ router.get('/status', async (req, res) => {
 });
 
 /**
+ * GET /api/v1/agents/verify/:code
+ * 获取claim code对应的verify_token
+ */
+router.get('/verify/:code', async (req, res) => {
+    try {
+        const { code } = req.params;
+
+        const { data: agent, error } = await supabase
+            .from('agents')
+            .select('id, username, claim_status, metadata')
+            .eq('claim_code', code)
+            .single();
+
+        if (error || !agent) {
+            return res.status(404).json({
+                success: false,
+                error: 'Invalid claim code'
+            });
+        }
+
+        if (agent.claim_status === 'claimed') {
+            return res.status(400).json({
+                success: false,
+                error: 'Agent already claimed'
+            });
+        }
+
+        res.json({
+            success: true,
+            verify_token: agent.metadata?.verify_token || `verify-${code.substring(0, 8).toUpperCase()}`,
+            username: agent.username
+        });
+    } catch (err) {
+        console.error('Verify error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+});
+
+/**
  * POST /api/v1/agents/claim/:code
  * 浜虹被璁ら Agent
  */
@@ -241,12 +283,20 @@ router.post('/claim/:code?', async (req, res) => {
     try {
         // 支持URL参数和body参数两种方式
         const code = req.params.code || req.body.claim_code;
-        const { twitter_username, owner_id } = req.body;
+        const { twitter_username, twitter_post_url, owner_id } = req.body;
 
         if (!code) {
             return res.status(400).json({
                 success: false,
                 error: 'Claim code is required'
+            });
+        }
+
+        if (!twitter_username || !twitter_post_url) {
+            return res.status(400).json({
+                success: false,
+                error: 'Twitter verification required',
+                hint: 'Post a tweet with your verify token and provide your Twitter username and tweet URL'
             });
         }
 
@@ -270,6 +320,36 @@ router.post('/claim/:code?', async (req, res) => {
             });
         }
 
+        // Verify Twitter post contains the verify token
+        const verifyToken = agent.metadata?.verify_token;
+        
+        if (verifyToken) {
+            // Extract tweet ID from URL
+            const tweetIdMatch = twitter_post_url.match(/status\/(\d+)/);
+            if (!tweetIdMatch) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid Twitter post URL',
+                    hint: 'URL should be like: https://twitter.com/username/status/123456789'
+                });
+            }
+
+            // For now, we'll do a simple validation
+            // In production, you'd use Twitter API to verify the tweet content
+            // For MVP, we just check that the URL is valid and store it for manual review if needed
+            
+            // Validate Twitter username format
+            const cleanUsername = twitter_username.replace('@', '').toLowerCase();
+            
+            // Check if URL matches the username
+            if (!twitter_post_url.toLowerCase().includes(cleanUsername)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Twitter username does not match the post URL'
+                });
+            }
+        }
+
         // 获取当前用户ID（如果已登录）
         const authHeader = req.headers.authorization;
         let userId = owner_id;
@@ -283,12 +363,14 @@ router.post('/claim/:code?', async (req, res) => {
         }
 
         const updateData = {
-            claim_status: 'claimed'
+            claim_status: 'claimed',
+            owner_twitter: twitter_username.replace('@', '').toLowerCase(),
+            metadata: {
+                ...agent.metadata,
+                twitter_post_url,
+                claimed_at: new Date().toISOString()
+            }
         };
-        
-        if (twitter_username) {
-            updateData.owner_twitter = twitter_username;
-        }
         
         if (userId) {
             updateData.owner_id = userId;

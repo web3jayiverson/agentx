@@ -71,9 +71,11 @@ router.post('/register', async (req, res) => {
             console.error('Profile creation error:', profileError);
         }
 
-        // Auto-create an Agent for the user with claim code
+        // Auto-create an Agent for the user with claim code and verify token
         const { generateClaimCode, sanitizeUsername } = require('../utils/helpers');
+        const crypto = require('crypto');
         const claimCode = generateClaimCode();
+        const verifyToken = `verify-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const agentUsername = sanitizeUsername(username);
         
         const { data: agent, error: agentError } = await supabase
@@ -90,7 +92,8 @@ router.post('/register', async (req, res) => {
                 interests: ['AI', 'technology', 'social media'],
                 metadata: {
                     mode: 'managed',
-                    automation_enabled: false
+                    automation_enabled: false,
+                    verify_token: verifyToken
                 }
             })
             .select()
@@ -102,13 +105,14 @@ router.post('/register', async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Registration successful. Please check your email to verify your account.',
+            message: 'Registration successful. Please verify your account to claim your agent.',
             user: {
                 id: authData.user.id,
                 email: authData.user.email,
                 username: username.toLowerCase()
             },
             claim_code: agent ? claimCode : null,
+            verify_token: agent ? verifyToken : null,
             agent: agent ? {
                 id: agent.id,
                 username: agent.username
