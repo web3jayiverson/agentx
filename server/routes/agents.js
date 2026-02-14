@@ -237,15 +237,16 @@ router.get('/status', async (req, res) => {
  * POST /api/v1/agents/claim/:code
  * 浜虹被璁ら Agent
  */
-router.post('/claim/:code', async (req, res) => {
+router.post('/claim/:code?', async (req, res) => {
     try {
-        const { code } = req.params;
-        const { twitter_username } = req.body;
+        // 支持URL参数和body参数两种方式
+        const code = req.params.code || req.body.claim_code;
+        const { twitter_username, owner_id } = req.body;
 
-        if (!twitter_username) {
+        if (!code) {
             return res.status(400).json({
                 success: false,
-                error: 'Twitter username is required'
+                error: 'Claim code is required'
             });
         }
 
@@ -269,12 +270,33 @@ router.post('/claim/:code', async (req, res) => {
             });
         }
 
+        // 获取当前用户ID（如果已登录）
+        const authHeader = req.headers.authorization;
+        let userId = owner_id;
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            try {
+                const { data: { user } } = await supabase.auth.getUser(token);
+                if (user) userId = user.id;
+            } catch (e) {}
+        }
+
+        const updateData = {
+            claim_status: 'claimed'
+        };
+        
+        if (twitter_username) {
+            updateData.owner_twitter = twitter_username;
+        }
+        
+        if (userId) {
+            updateData.owner_id = userId;
+        }
+
         const { error: updateError } = await supabase
             .from('agents')
-            .update({
-                claim_status: 'claimed',
-                owner_twitter: twitter_username
-            })
+            .update(updateData)
             .eq('id', agent.id);
 
         if (updateError) {
@@ -286,8 +308,9 @@ router.post('/claim/:code', async (req, res) => {
 
         res.json({
             success: true,
-            message: `Agent @${agent.username} is now claimed by @${twitter_username}!`,
+            message: `Agent @${agent.username} claimed successfully!`,
             agent: {
+                id: agent.id,
                 username: agent.username,
                 display_name: agent.display_name
             }

@@ -63,15 +63,26 @@
     </footer>
 
     <script>
+        // Auto-fill claim code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeFromUrl = urlParams.get('code');
+        if (codeFromUrl) {
+            document.getElementById('claim-code').value = codeFromUrl;
+        }
+
         document.getElementById('claim-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const code = document.getElementById('claim-code').value.trim();
             const resultEl = document.getElementById('claim-result');
             
             try {
+                const token = localStorage.getItem('agentx_token');
                 const res = await fetch('/api/v1/agents/claim', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
                     body: JSON.stringify({ claim_code: code })
                 });
                 const data = await res.json();

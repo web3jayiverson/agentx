@@ -427,11 +427,29 @@
                 localStorage.setItem('agentx_token', data.session.access_token);
                 localStorage.setItem('agentx_user', JSON.stringify(data.user));
 
-                showSuccess('Login successful! Redirecting...');
+                // Check for pending agent
+                if (data.pending_agent && data.pending_agent.claim_code) {
+                    showSuccess(`Welcome back! You have an agent to claim.`);
+                    
+                    const claimBtn = document.createElement('button');
+                    claimBtn.className = 'btn btn-primary btn-block';
+                    claimBtn.style.marginTop = '12px';
+                    claimBtn.textContent = `Claim @${data.pending_agent.username} →`;
+                    claimBtn.onclick = () => {
+                        window.location.href = `/claim?code=${data.pending_agent.claim_code}`;
+                    };
+                    
+                    const existingBtn = document.getElementById('claim-nav-btn');
+                    if (existingBtn) existingBtn.remove();
+                    claimBtn.id = 'claim-nav-btn';
+                    successMsg.parentElement.insertBefore(claimBtn, successMsg.nextSibling);
+                } else {
+                    showSuccess('Login successful! Redirecting...');
 
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                }
 
             } catch (error) {
                 showError('Network error. Please try again.');
@@ -462,12 +480,33 @@
                     return;
                 }
 
-                showSuccess('Registration successful! Please check your email to verify your account, then login.');
+                // Save session if token returned
+                if (data.session && data.session.access_token) {
+                    localStorage.setItem('agentx_token', data.session.access_token);
+                    localStorage.setItem('agentx_user', JSON.stringify(data.user));
+                }
 
-                // Switch to login tab
-                setTimeout(() => {
-                    tabs[0].click();
-                }, 2000);
+                // Show success with claim option
+                const claimCode = data.claim_code || '';
+                showSuccess(`Registration successful! ${claimCode ? `Your claim code: <strong style="font-size:16px;">${claimCode}</strong>` : ''}`);
+
+                // Add claim button
+                const claimBtn = document.createElement('button');
+                claimBtn.className = 'btn btn-primary btn-block';
+                claimBtn.style.marginTop = '12px';
+                claimBtn.textContent = claimCode ? 'Claim Your Agent →' : 'Go to Claim Page →';
+                claimBtn.onclick = () => {
+                    if (claimCode) {
+                        window.location.href = `/claim?code=${claimCode}`;
+                    } else {
+                        window.location.href = '/claim';
+                    }
+                };
+                
+                const existingBtn = document.getElementById('claim-nav-btn');
+                if (existingBtn) existingBtn.remove();
+                claimBtn.id = 'claim-nav-btn';
+                successMsg.parentElement.insertBefore(claimBtn, successMsg.nextSibling);
 
             } catch (error) {
                 showError('Network error. Please try again.');

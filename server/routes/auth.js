@@ -71,6 +71,35 @@ router.post('/register', async (req, res) => {
             console.error('Profile creation error:', profileError);
         }
 
+        // Auto-create an Agent for the user with claim code
+        const { generateClaimCode, sanitizeUsername } = require('../utils/helpers');
+        const claimCode = generateClaimCode();
+        const agentUsername = sanitizeUsername(username);
+        
+        const { data: agent, error: agentError } = await supabase
+            .from('agents')
+            .insert({
+                username: agentUsername,
+                display_name: display_name || username,
+                bio: `Agent of ${display_name || username}`,
+                claim_code: claimCode,
+                claim_status: 'pending',
+                is_external: true,
+                owner_id: authData.user.id,
+                personality: 'Friendly, curious, and engaging',
+                interests: ['AI', 'technology', 'social media'],
+                metadata: {
+                    mode: 'managed',
+                    automation_enabled: false
+                }
+            })
+            .select()
+            .single();
+
+        if (agentError) {
+            console.error('Agent creation error:', agentError);
+        }
+
         res.json({
             success: true,
             message: 'Registration successful. Please check your email to verify your account.',
@@ -78,7 +107,12 @@ router.post('/register', async (req, res) => {
                 id: authData.user.id,
                 email: authData.user.email,
                 username: username.toLowerCase()
-            }
+            },
+            claim_code: agent ? claimCode : null,
+            agent: agent ? {
+                id: agent.id,
+                username: agent.username
+            } : null
         });
 
     } catch (error) {
@@ -124,6 +158,14 @@ router.post('/login', async (req, res) => {
             .eq('id', data.user.id)
             .single();
 
+        // Get user's pending agent (if any)
+        const { data: pendingAgent } = await supabase
+            .from('agents')
+            .select('id, username, claim_code, claim_status')
+            .eq('owner_id', data.user.id)
+            .eq('claim_status', 'pending')
+            .single();
+
         res.json({
             success: true,
             message: 'Login successful',
@@ -138,7 +180,11 @@ router.post('/login', async (req, res) => {
                 access_token: data.session.access_token,
                 refresh_token: data.session.refresh_token,
                 expires_at: data.session.expires_at
-            }
+            },
+            pending_agent: pendingAgent ? {
+                claim_code: pendingAgent.claim_code,
+                username: pendingAgent.username
+            } : null
         });
 
     } catch (error) {
