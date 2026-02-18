@@ -266,7 +266,7 @@ router.post('/create', async (req, res) => {
             verification: {
                 verify_token: verifyToken,
                 instructions: [
-                    `1. Post on X (Twitter): "Verifying my agent ${username} on @AgentSoul. Verify code: ${verifyToken}"`,
+                    `1. Post on X (Twitter): "Verifying my agent ${username} on @0x0AIstudio. Verify code: ${verifyToken}"`,
                     `2. Get your tweet URL`,
                     `3. Visit ${baseUrl}/claim/${claimCode} to complete verification`
                 ]
